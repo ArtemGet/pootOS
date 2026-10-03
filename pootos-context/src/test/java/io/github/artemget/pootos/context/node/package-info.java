@@ -22,44 +22,9 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context;
-
-import java.util.Collection;
-
 /**
- * An immutable context graph of content-addressed nodes and typed edges.
+ * Tests for the context node package.
  *
  * @since 0.0.1
  */
-public interface Graph {
-
-    /**
-     * A new graph that also contains the given node.
-     *
-     * @param node Node to include
-     * @return New graph including the node
-     */
-    Graph with(Node node);
-
-    /**
-     * A new graph that also contains the given edge.
-     *
-     * @param edge Edge to include
-     * @return New graph including the edge
-     */
-    Graph with(Edge edge);
-
-    /**
-     * Nodes reachable from the seed within the given number of hops.
-     *
-     * <p>Traversal follows edges in both directions, so an edge connects its
-     * endpoints for the purpose of a slice. The seed itself is included when
-     * the graph contains it; a depth of zero yields only the seed. Nodes whose
-     * id is unknown to the graph are never returned.</p>
-     *
-     * @param seed Node to start from
-     * @param depth Maximum number of hops
-     * @return Reachable nodes, seed included
-     */
-    Collection<Node> slice(NodeId seed, int depth);
-}
+package io.github.artemget.pootos.context.node;

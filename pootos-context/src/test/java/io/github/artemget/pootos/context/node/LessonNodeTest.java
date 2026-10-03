@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context;
+package io.github.artemget.pootos.context.node;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;

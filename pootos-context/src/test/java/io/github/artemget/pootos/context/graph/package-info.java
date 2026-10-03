@@ -22,48 +22,9 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context;
-
 /**
- * Content-addressed identity of a node, a canonical hex string.
+ * Tests for the context graph package.
  *
  * @since 0.0.1
  */
-public final class NodeId implements Text {
-
-    /**
-     * Canonical hex digest.
-     */
-    private final String hex;
-
-    /**
-     * Ctor.
-     *
-     * @param hex Canonical hex digest
-     */
-    public NodeId(final String hex) {
-        this.hex = hex;
-    }
-
-    @Override
-    public String value() {
-        return this.hex;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-            || obj instanceof NodeId node
-            && this.hex.equals(node.hex);
-    }
-
-    @Override
-    public int hashCode() {
-        return this.hex.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return this.hex;
-    }
-}
+package io.github.artemget.pootos.context.graph;

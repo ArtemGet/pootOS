@@ -22,9 +22,43 @@
  * SOFTWARE.
  */
 
+package io.github.artemget.pootos.context.node;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+
 /**
- * Context graph primitives: nodes, edges and content-addressing.
+ * SHA-256 hex digest of a source text.
  *
  * @since 0.0.1
  */
-package io.github.artemget.pootos.context;
+public final class HexDigest implements Text {
+
+    /**
+     * Source text.
+     */
+    private final String source;
+
+    /**
+     * Ctor.
+     *
+     * @param source Source text
+     */
+    public HexDigest(final String source) {
+        this.source = source;
+    }
+
+    @Override
+    public String value() {
+        try {
+            return HexFormat.of().formatHex(
+                MessageDigest.getInstance("SHA-256")
+                    .digest(this.source.getBytes(StandardCharsets.UTF_8))
+            );
+        } catch (final NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 algorithm unavailable", ex);
+        }
+    }
+}

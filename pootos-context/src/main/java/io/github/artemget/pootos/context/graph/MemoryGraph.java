@@ -22,8 +22,11 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context;
+package io.github.artemget.pootos.context.graph;
 
+import io.github.artemget.pootos.context.edge.Edge;
+import io.github.artemget.pootos.context.node.Node;
+import io.github.artemget.pootos.context.node.NodeId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;

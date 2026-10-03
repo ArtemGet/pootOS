@@ -22,8 +22,9 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context;
+package io.github.artemget.pootos.context.edge;
 
+import io.github.artemget.pootos.context.node.NodeId;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;

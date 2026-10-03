@@ -22,33 +22,9 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context;
-
 /**
- * A typed directed relation between two context nodes.
+ * Graphs over content-addressed nodes and typed edges.
  *
  * @since 0.0.1
  */
-public interface Edge {
-
-    /**
-     * Source node of this relation.
-     *
-     * @return Source node id
-     */
-    NodeId from();
-
-    /**
-     * Kind of this relation.
-     *
-     * @return Relation kind
-     */
-    Relation relation();
-
-    /**
-     * Target node of this relation.
-     *
-     * @return Target node id
-     */
-    NodeId to();
-}
+package io.github.artemget.pootos.context.graph;

@@ -22,75 +22,74 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context;
+package io.github.artemget.pootos.context.node;
 
 import java.util.Objects;
 
 /**
- * An immutable edge between two content-addressed nodes.
+ * A first-class lesson of the journal of mistakes.
  *
  * @since 0.0.1
  */
-public final class TypedEdge implements Edge {
+public final class LessonNode implements Node {
 
     /**
-     * Source node.
+     * Trigger signature.
      */
-    private final NodeId source;
+    private final String trigger;
 
     /**
-     * Relation kind.
+     * Advice to apply.
      */
-    private final Relation kind;
+    private final String advice;
 
     /**
-     * Target node.
+     * Confidence in the lesson.
      */
-    private final NodeId target;
+    private final double confidence;
 
     /**
      * Ctor.
      *
-     * @param source Source node
-     * @param kind Relation kind
-     * @param target Target node
+     * @param trigger Trigger signature
+     * @param advice Advice to apply
+     * @param confidence Confidence in the lesson
      */
-    public TypedEdge(final NodeId source, final Relation kind, final NodeId target) {
-        this.source = source;
-        this.kind = kind;
-        this.target = target;
+    public LessonNode(final String trigger, final String advice, final double confidence) {
+        this.trigger = trigger;
+        this.advice = advice;
+        this.confidence = confidence;
     }
 
     @Override
-    public NodeId from() {
-        return this.source;
+    public NodeId id() {
+        return new NodeId(new HexDigest(this.json()).value());
     }
 
     @Override
-    public Relation relation() {
-        return this.kind;
-    }
-
-    @Override
-    public NodeId to() {
-        return this.target;
+    public String json() {
+        return "{\"advice\":\"%s\",\"confidence\":%s,\"trigger\":\"%s\"}".formatted(
+            new EscapedText(this.advice).value(),
+            this.confidence,
+            new EscapedText(this.trigger).value()
+        );
     }
 
     @Override
     public boolean equals(final Object obj) {
         return this == obj
-            || obj instanceof TypedEdge node
+            || obj instanceof LessonNode node
             && this.same(node);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.source, this.kind, this.target);
+        return Objects.hash(this.trigger, this.advice, this.confidence);
     }
 
-    private boolean same(final TypedEdge other) {
-        return this.source.equals(other.source)
-            && this.kind.equals(other.kind)
-            && this.target.equals(other.target);
+    private boolean same(final LessonNode other) {
+        return this.trigger.equals(other.trigger)
+            && this.advice.equals(other.advice)
+            && Double.compare(this.confidence, other.confidence) == 0;
     }
 }

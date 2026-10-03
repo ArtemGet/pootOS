@@ -22,20 +22,47 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context;
+package io.github.artemget.pootos.context.edge;
 
 /**
- * A textual value that renders itself on demand.
+ * Kinds of typed relation between two context nodes.
  *
  * @since 0.0.1
  */
-@FunctionalInterface
-public interface Text {
+public enum Relation {
 
     /**
-     * Render this value as text.
-     *
-     * @return Value as text
+     * Depends on.
      */
-    String value();
+    DEPENDS_ON,
+
+    /**
+     * Derived from.
+     */
+    DERIVED_FROM,
+
+    /**
+     * Supersedes.
+     */
+    SUPERSEDES,
+
+    /**
+     * Invalidated by.
+     */
+    INVALIDATED_BY,
+
+    /**
+     * Taught by.
+     */
+    TAUGHT_BY,
+
+    /**
+     * Addresses.
+     */
+    ADDRESSES,
+
+    /**
+     * Produces.
+     */
+    PRODUCES
 }

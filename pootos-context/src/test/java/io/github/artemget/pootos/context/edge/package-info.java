@@ -23,8 +23,8 @@
  */
 
 /**
- * Tests for the context graph primitives.
+ * Tests for the context edge package.
  *
  * @since 0.0.1
  */
-package io.github.artemget.pootos.context;
+package io.github.artemget.pootos.context.edge;

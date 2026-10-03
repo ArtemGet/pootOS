@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context;
+package io.github.artemget.pootos.context.node;
 
 /**
  * A content-addressed vertex of the context graph.
