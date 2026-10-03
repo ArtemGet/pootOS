@@ -44,6 +44,7 @@
     <module>pootos-kernel</module>
     <module>pootos-agent</module>
     <module>pootos-sandbox</module>
+    <module>pootos-system</module>
   </modules>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
