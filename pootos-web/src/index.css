@@ -1,22 +1,8 @@
-:root {
-  color-scheme: dark;
-  font-family: system-ui, -apple-system, sans-serif;
-  color: #e6e6e6;
-  background: #14161a;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
 .app {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background: var(--bg);
 }
 
 .topbar {
@@ -24,21 +10,53 @@ body {
   align-items: center;
   gap: 1rem;
   padding: 0.6rem 1rem;
-  border-bottom: 1px solid #2a2e35;
-  background: #1a1d22;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);
 }
 
 .brand {
-  font-weight: 700;
+  font-family: var(--mono);
+  font-weight: 600;
   letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.brand::before {
+  content: "\25cf";
+  color: var(--accent);
+  margin-right: 0.5rem;
+  font-size: 0.7em;
 }
 
 .chat-placeholder {
   flex: 1;
   padding: 0.5rem 0.75rem;
-  border: 1px dashed #3a4048;
-  border-radius: 6px;
-  color: #8a93a0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.health {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.health::before {
+  content: "\25cf";
+  margin-right: 0.4rem;
+}
+
+.health-ok {
+  color: var(--green);
+}
+
+.health-offline {
+  color: var(--text-dim);
 }
 
 .content {
@@ -59,17 +77,18 @@ body {
 
 .panel {
   padding: 0.75rem 1rem;
-  border: 1px solid #2a2e35;
-  border-radius: 8px;
-  background: #1a1d22;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
 }
 
 .panel h2 {
   margin: 0 0 0.75rem;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #8a93a0;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
 }
 
 .zone-columns {
@@ -79,26 +98,40 @@ body {
 }
 
 .zone {
-  border-top: 3px solid #444;
-  padding-top: 0.5rem;
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--border-strong);
 }
 
 .zone-red {
-  border-color: #e5484d;
+  border-left-color: var(--red);
 }
 
 .zone-yellow {
-  border-color: #e0b341;
+  border-left-color: var(--yellow);
 }
 
 .zone-green {
-  border-color: #46b17b;
+  border-left-color: var(--green);
 }
 
 .zone h3 {
   margin: 0 0 0.5rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.zone-red h3 {
+  color: var(--red);
+}
+
+.zone-yellow h3 {
+  color: var(--yellow);
+}
+
+.zone-green h3 {
+  color: var(--green);
 }
 
 .zone ul,
@@ -113,17 +146,20 @@ body {
 
 .card {
   padding: 0.4rem 0.5rem;
-  border: 1px solid #2a2e35;
-  border-radius: 5px;
-  background: #20242b;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text);
   font-size: 0.8rem;
 }
 
 .card-kind {
   display: block;
-  font-size: 0.65rem;
-  color: #8a93a0;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--text-dim);
 }
 
 .graph-canvas {
@@ -131,37 +167,76 @@ body {
 }
 
 .graph-canvas .react-flow {
-  background: #14161a;
+  background: var(--bg);
+}
+
+.graph-canvas .react-flow__node {
+  padding: 0.35rem 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.graph-canvas .react-flow__edge-path {
+  stroke: var(--border-strong);
+}
+
+.graph-canvas .react-flow__edge-text {
+  fill: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.62rem;
+}
+
+.graph-canvas .react-flow__controls-button {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+}
+
+.graph-canvas .react-flow__controls-button svg {
+  fill: var(--text-muted);
 }
 
 .agent-card {
-  border: 1px solid #2a2e35;
-  border-radius: 6px;
   padding: 0.5rem 0.6rem;
-  background: #20242b;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
 }
 
 .agent-head {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
   margin-bottom: 0.4rem;
 }
 
+.agent-head strong {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
 .status {
-  font-size: 0.7rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
   text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .status-working {
-  color: #46b17b;
+  color: var(--green);
 }
 
 .status-idle {
-  color: #8a93a0;
+  color: var(--text-muted);
 }
 
 .status-stalled {
-  color: #e5484d;
+  color: var(--red);
 }
 
 .agent-card dl {
@@ -173,11 +248,17 @@ body {
 }
 
 .agent-card dt {
-  color: #8a93a0;
+  align-self: center;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
 }
 
 .agent-card dd {
   margin: 0;
+  font-family: var(--mono);
+  color: var(--text);
 }
 
 .resources table {
@@ -189,15 +270,23 @@ body {
 .resources th,
 .resources td {
   text-align: left;
-  padding: 0.3rem 0.4rem;
-  border-bottom: 1px solid #2a2e35;
+  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .resources th {
-  color: #8a93a0;
+  font-size: 0.62rem;
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
 }
 
-.resources tr.stalled {
-  color: #e5484d;
+.resources td {
+  color: var(--text-muted);
+}
+
+.resources td:first-child {
+  font-family: var(--mono);
+  color: var(--text);
 }

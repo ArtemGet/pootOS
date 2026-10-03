@@ -1,6 +1,9 @@
-import { resources } from '../mock';
+import { fetchResources, type ApiResources } from '../api';
+import { mockResources } from '../mock';
+import { useRemote } from '../useRemote';
 
 export function ResourceDashboard() {
+  const { leases } = useRemote<ApiResources>(fetchResources, mockResources);
   return (
     <section className="panel resources">
       <h2>Resources</h2>
@@ -8,24 +11,16 @@ export function ResourceDashboard() {
         <thead>
           <tr>
             <th>Resource</th>
-            <th>TTL</th>
-            <th>Budget</th>
-            <th>Cost</th>
-            <th />
+            <th>Owner</th>
+            <th>Expires</th>
           </tr>
         </thead>
         <tbody>
-          {resources.map((resource) => (
-            <tr key={resource.id} className={resource.stalled ? 'stalled' : undefined}>
-              <td>{resource.name}</td>
-              <td>{resource.leaseTtl}</td>
-              <td>{resource.budget}</td>
-              <td>{resource.cost}</td>
-              <td>
-                <button type="button" disabled>
-                  {resource.stalled ? 'restart' : 'stop'}
-                </button>
-              </td>
+          {leases.map((lease) => (
+            <tr key={lease.resource}>
+              <td>{lease.resource}</td>
+              <td>{lease.owner}</td>
+              <td>{lease.expires}</td>
             </tr>
           ))}
         </tbody>
