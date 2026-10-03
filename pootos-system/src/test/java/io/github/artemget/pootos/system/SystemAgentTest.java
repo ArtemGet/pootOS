@@ -26,10 +26,13 @@ package io.github.artemget.pootos.system;
 
 import io.github.artemget.pootos.system.config.ConfigDirectory;
 import io.github.artemget.pootos.system.config.FileConfigResolver;
+import io.github.artemget.pootos.system.provider.ProviderConfig;
+import io.github.artemget.pootos.system.provider.RecordedProvider;
 import io.github.artemget.pootos.system.secret.DeclaredSecretForm;
 import java.nio.file.Path;
 import java.util.List;
 import org.cactoos.text.TextOf;
+import org.cactoos.text.UncheckedText;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -43,37 +46,77 @@ import org.junit.jupiter.api.io.TempDir;
 final class SystemAgentTest {
 
     @Test
-    void writesProviderConfig(@TempDir final Path dir) throws Exception {
+    void accumulatesProviders(@TempDir final Path dir) throws Exception {
         final ConfigDirectory folder = new ConfigDirectory(dir);
-        new ConfiguredSystemAgent(
+        final SystemAgent agent = new ConfiguredSystemAgent(
             folder, new DeclaredSecretForm(List.of())
-        ).defineProvider(new TextOf("openai"), new TextOf("https://api.openai.com"));
+        );
+        SystemAgentTest.record(agent, "openai", "openai", "gpt-4o");
+        SystemAgentTest.record(agent, "anthropic", "anthropic", "claude-3");
         MatcherAssert.assertThat(
-            "A defined provider must be readable from the config file",
-            new FileConfigResolver(folder.file("providers.conf")).value("openai").asString(),
-            Matchers.equalTo("https://api.openai.com")
+            "Defining two providers must keep both in the config file",
+            new FileConfigResolver(folder.file("providers.conf")).value("providers").asString(),
+            Matchers.equalTo("openai,anthropic")
         );
     }
 
     @Test
-    void readsProviderConfig(@TempDir final Path dir) throws Exception {
-        final ConfigDirectory folder = new ConfigDirectory(dir);
-        folder.file("providers.conf").write(new TextOf("openai=https://api.openai.com"));
+    void redefinesProvider(@TempDir final Path dir) throws Exception {
+        final SystemAgent agent = new ConfiguredSystemAgent(
+            new ConfigDirectory(dir), new DeclaredSecretForm(List.of())
+        );
+        SystemAgentTest.record(agent, "openai", "openai", "gpt-4o");
+        SystemAgentTest.record(agent, "anthropic", "anthropic", "claude-3");
+        SystemAgentTest.record(agent, "openai", "openai", "gpt-5");
         MatcherAssert.assertThat(
-            "A stored provider endpoint must be read back",
-            new ConfiguredSystemAgent(folder, new DeclaredSecretForm(List.of()))
-                .provider(new TextOf("openai")).asString(),
-            Matchers.equalTo("https://api.openai.com")
+            "Redefining a name must replace only that entry",
+            agent.providers().stream()
+                .map(entry -> new UncheckedText(entry.model()).asString())
+                .toList(),
+            Matchers.contains("gpt-5", "claude-3")
         );
     }
 
     @Test
-    void exposesSecretForm(@TempDir final Path dir) {
+    void listsConfiguredProviders(@TempDir final Path dir) throws Exception {
+        final SystemAgent agent = new ConfiguredSystemAgent(
+            new ConfigDirectory(dir), new DeclaredSecretForm(List.of())
+        );
+        SystemAgentTest.record(agent, "openai", "openai", "gpt-4o");
         MatcherAssert.assertThat(
-            "A system agent must expose the secrets a human must supply",
-            new ConfiguredSystemAgent(new ConfigDirectory(dir), new DeclaredSecretForm(List.of()))
-                .secretForm().fields(),
+            "Listing must expose every recorded entry field",
+            new ProviderConfig(agent.providers()).asString(),
+            Matchers.allOf(
+                Matchers.containsString("providers=openai"),
+                Matchers.containsString("openai.base=https://api.openai.com"),
+                Matchers.containsString("openai.model=gpt-4o"),
+                Matchers.containsString("openai.key=env:OPENAI_KEY")
+            )
+        );
+    }
+
+    @Test
+    void listsNothingWhenUnset(@TempDir final Path dir) throws Exception {
+        MatcherAssert.assertThat(
+            "An absent config must list no providers",
+            new ConfiguredSystemAgent(
+                new ConfigDirectory(dir), new DeclaredSecretForm(List.of())
+            ).providers(),
             Matchers.empty()
+        );
+    }
+
+    private static void record(
+        final SystemAgent agent, final String name, final String kind, final String model
+    ) throws Exception {
+        agent.defineProvider(
+            new RecordedProvider(
+                new TextOf(name),
+                new TextOf(kind),
+                new TextOf("https://api.openai.com"),
+                new TextOf(model),
+                new TextOf("env:OPENAI_KEY")
+            )
         );
     }
 }

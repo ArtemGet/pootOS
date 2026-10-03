@@ -27,17 +27,27 @@ package io.github.artemget.pootos.system;
 import io.github.artemget.pootos.system.config.ConfigDirectory;
 import io.github.artemget.pootos.system.config.ConfigException;
 import io.github.artemget.pootos.system.config.ConfigFile;
+import io.github.artemget.pootos.system.config.ConfigResolver;
 import io.github.artemget.pootos.system.config.FileConfigResolver;
+import io.github.artemget.pootos.system.provider.ProviderConfig;
+import io.github.artemget.pootos.system.provider.ProviderEntry;
+import io.github.artemget.pootos.system.provider.RecordedProvider;
 import io.github.artemget.pootos.system.secret.SecretForm;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.cactoos.Text;
-import org.cactoos.text.FormattedText;
+import org.cactoos.text.Split;
+import org.cactoos.text.TextOf;
 import org.cactoos.text.UncheckedText;
 
 /**
- * A {@link SystemAgent} that stores provider endpoints in a config file.
+ * A {@link SystemAgent} that accumulates provider entries in a config file.
  *
- * <p>Only plain data is written: a provider name and its endpoint. No
- * secret value ever passes through this object.</p>
+ * <p>Only plain data is written: a provider name, kind, base URL, default
+ * model and secret reference name. No secret value ever passes through this
+ * object.</p>
  *
  * @since 0.0.1
  */
@@ -70,13 +80,38 @@ public final class ConfiguredSystemAgent implements SystemAgent {
     }
 
     @Override
-    public void defineProvider(final Text name, final Text endpoint) throws ConfigException {
-        this.config().write(new FormattedText("%s=%s", name, endpoint));
+    public void defineProvider(final ProviderEntry entry) throws ConfigException {
+        final Map<String, ProviderEntry> entries = new LinkedHashMap<>();
+        for (final ProviderEntry existing : this.providers()) {
+            entries.put(new UncheckedText(existing.name()).asString(), existing);
+        }
+        entries.put(new UncheckedText(entry.name()).asString(), entry);
+        this.config().write(new ProviderConfig(entries.values()));
     }
 
     @Override
-    public Text provider(final Text name) throws ConfigException {
-        return new FileConfigResolver(this.config()).value(new UncheckedText(name).asString());
+    public Collection<ProviderEntry> providers() throws ConfigException {
+        final Collection<ProviderEntry> entries = new ArrayList<>(0);
+        final ConfigFile file = this.config();
+        if (file.exists()) {
+            final ConfigResolver resolver = new FileConfigResolver(file);
+            final String index = new UncheckedText(resolver.value("providers")).asString();
+            for (final Text name : new Split(new TextOf(index), new TextOf(","))) {
+                final String clean = new UncheckedText(name).asString().trim();
+                if (!clean.isEmpty()) {
+                    entries.add(
+                        new RecordedProvider(
+                            new TextOf(clean),
+                            resolver.value(clean.concat(".kind")),
+                            resolver.value(clean.concat(".base")),
+                            resolver.value(clean.concat(".model")),
+                            resolver.value(clean.concat(".key"))
+                        )
+                    );
+                }
+            }
+        }
+        return entries;
     }
 
     private ConfigFile config() {

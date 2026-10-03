@@ -22,56 +22,87 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.system.config;
+package io.github.artemget.pootos.system.provider;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import org.cactoos.Text;
-import org.cactoos.text.TextOf;
-import org.cactoos.text.UncheckedText;
 
 /**
- * A {@link ConfigFile} stored on the local filesystem.
+ * A {@link ProviderEntry} assembled from its plain, non-secret parts.
  *
  * @since 0.0.1
  */
-public final class LocalConfigFile implements ConfigFile {
+public final class RecordedProvider implements ProviderEntry {
 
     /**
-     * File path.
+     * Provider name.
      */
-    private final Path path;
+    private final Text provider;
+
+    /**
+     * Provider kind.
+     */
+    private final Text type;
+
+    /**
+     * Base URL.
+     */
+    private final Text url;
+
+    /**
+     * Default model.
+     */
+    private final Text preferred;
+
+    /**
+     * Secret reference name.
+     */
+    private final Text reference;
 
     /**
      * Ctor.
      *
-     * @param path File path
+     * @param name Provider name
+     * @param kind Provider kind
+     * @param base Base URL
+     * @param model Default model
+     * @param key Secret reference name
      */
-    public LocalConfigFile(final Path path) {
-        this.path = path;
+    public RecordedProvider(
+        final Text name,
+        final Text kind,
+        final Text base,
+        final Text model,
+        final Text key
+    ) {
+        this.provider = name;
+        this.type = kind;
+        this.url = base;
+        this.preferred = model;
+        this.reference = key;
     }
 
     @Override
-    public Text read() throws ConfigException {
-        try {
-            return new TextOf(Files.readString(this.path));
-        } catch (final IOException err) {
-            throw new ConfigException("Failed to read config file", err);
-        }
+    public Text name() {
+        return this.provider;
     }
 
     @Override
-    public void write(final Text data) throws ConfigException {
-        try {
-            Files.writeString(this.path, new UncheckedText(data).asString());
-        } catch (final IOException err) {
-            throw new ConfigException("Failed to write config file", err);
-        }
+    public Text kind() {
+        return this.type;
     }
 
     @Override
-    public boolean exists() {
-        return Files.exists(this.path);
+    public Text base() {
+        return this.url;
+    }
+
+    @Override
+    public Text model() {
+        return this.preferred;
+    }
+
+    @Override
+    public Text key() {
+        return this.reference;
     }
 }
