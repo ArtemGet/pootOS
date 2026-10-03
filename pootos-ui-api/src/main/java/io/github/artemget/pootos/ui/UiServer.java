@@ -76,15 +76,30 @@ public final class UiServer implements UiApi {
             new InetSocketAddress(this.host, this.port), 0
         );
         server.createContext(
-            "/api/health", new JsonHandler(new TextOf("{\"status\":\"ok\"}"))
+            "/api/health",
+            new ExactPath(
+                "/api/health",
+                new JsonHandler(new TextOf("{\"status\":\"ok\"}"))
+            )
         );
         server.createContext(
-            "/api/agents", new JsonHandler(new TextOf("{\"agents\":[]}"))
+            "/api/agents",
+            new ExactPath(
+                "/api/agents",
+                new JsonHandler(new TextOf("{\"agents\":[]}"))
+            )
         );
         server.createContext(
-            "/api/resources", new JsonHandler(new TextOf("{\"leases\":[]}"))
+            "/api/resources",
+            new ExactPath(
+                "/api/resources",
+                new JsonHandler(new TextOf("{\"leases\":[]}"))
+            )
         );
-        server.createContext("/api/graph", new GraphHandler(this.store));
+        server.createContext(
+            "/api/graph",
+            new ExactPath("/api/graph", new GraphHandler(this.store))
+        );
         server.start();
         return new BoundServer(server);
     }

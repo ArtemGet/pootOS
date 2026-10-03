@@ -24,7 +24,7 @@
 
 package io.github.artemget.pootos.ui;
 
-import io.github.artemget.pootos.context.graph.Graph;
+import io.github.artemget.pootos.context.graph.GraphView;
 import io.github.artemget.pootos.context.store.GraphStore;
 import io.github.artemget.pootos.context.store.StoreException;
 import org.cactoos.Text;
@@ -62,7 +62,7 @@ public final class GraphJson implements Text {
 
     @Override
     public String asString() throws StoreException {
-        final Graph graph = this.store.load();
+        final GraphView graph = this.store.load();
         return new UncheckedText(
             new FormattedText(
                 "{\"nodes\":[%s],\"edges\":[%s]}",

@@ -28,6 +28,7 @@ import io.github.artemget.pootos.context.node.Node;
 import io.github.artemget.pootos.context.node.TaskNode;
 import io.github.artemget.pootos.context.store.GraphStore;
 import io.github.artemget.pootos.context.store.SqliteGraphStore;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -50,19 +51,47 @@ final class UiServerTest {
 
     @Test
     void answersHealth(@TempDir final Path dir) throws Exception {
-        try (Connection connection = DriverManager.getConnection(this.url(dir))) {
-            try (
-                UiRunning running = new UiServer(
-                    "127.0.0.1", 0, new SqliteGraphStore(connection)
-                ).start()
-            ) {
-                MatcherAssert.assertThat(
-                    "Health endpoint must report ok",
-                    this.get(running.port(), "/api/health"),
-                    Matchers.containsString("\"status\":\"ok\"")
-                );
-            }
-        }
+        MatcherAssert.assertThat(
+            "Health endpoint must report ok",
+            this.body(dir, "/api/health"),
+            Matchers.containsString("\"status\":\"ok\"")
+        );
+    }
+
+    @Test
+    void listsNoAgents(@TempDir final Path dir) throws Exception {
+        MatcherAssert.assertThat(
+            "Agents endpoint must expose an empty list",
+            this.body(dir, "/api/agents"),
+            Matchers.containsString("\"agents\":[]")
+        );
+    }
+
+    @Test
+    void listsNoResources(@TempDir final Path dir) throws Exception {
+        MatcherAssert.assertThat(
+            "Resources endpoint must expose an empty lease list",
+            this.body(dir, "/api/resources"),
+            Matchers.containsString("\"leases\":[]")
+        );
+    }
+
+    @Test
+    void rejectsGraphPrefix(@TempDir final Path dir) throws Exception {
+        MatcherAssert.assertThat(
+            "A path sharing an endpoint prefix must not be served",
+            this.status(dir, "/api/graphfoo"),
+            Matchers.is(404)
+        );
+    }
+
+    @Test
+    void rejectsNestedPath(@TempDir final Path dir) throws Exception {
+        MatcherAssert.assertThat(
+            "A nested path under an endpoint must not be served",
+            this.status(dir, "/api/health/extra"),
+            Matchers.is(404)
+        );
     }
 
     @Test
@@ -71,7 +100,7 @@ final class UiServerTest {
         try (Connection connection = DriverManager.getConnection(this.url(dir))) {
             final GraphStore store = new SqliteGraphStore(connection);
             store.persist(node);
-            try (UiRunning running = new UiServer("127.0.0.1", 0, store).start()) {
+            try (UiRunning running = this.server(store)) {
                 MatcherAssert.assertThat(
                     "Graph endpoint must expose the persisted node",
                     this.get(running.port(), "/api/graph"),
@@ -81,7 +110,40 @@ final class UiServerTest {
         }
     }
 
+    private String body(final Path dir, final String path) throws Exception {
+        try (Connection connection = DriverManager.getConnection(this.url(dir))) {
+            try (
+                UiRunning running = this.server(
+                    new SqliteGraphStore(connection)
+                )
+            ) {
+                return this.get(running.port(), path);
+            }
+        }
+    }
+
+    private int status(final Path dir, final String path) throws Exception {
+        try (Connection connection = DriverManager.getConnection(this.url(dir))) {
+            try (
+                UiRunning running = this.server(
+                    new SqliteGraphStore(connection)
+                )
+            ) {
+                return this.respond(running.port(), path).statusCode();
+            }
+        }
+    }
+
+    private UiRunning server(final GraphStore store) throws IOException {
+        return new UiServer("127.0.0.1", 0, store).start();
+    }
+
     private String get(final int port, final String path) throws Exception {
+        return this.respond(port, path).body();
+    }
+
+    private HttpResponse<String> respond(final int port, final String path)
+        throws Exception {
         try (
             HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
@@ -94,7 +156,7 @@ final class UiServerTest {
                     )
                 ).timeout(Duration.ofSeconds(5)).GET().build(),
                 HttpResponse.BodyHandlers.ofString()
-            ).body();
+            );
         }
     }
 

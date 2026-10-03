@@ -25,14 +25,15 @@
 package io.github.artemget.pootos.context.store;
 
 import io.github.artemget.pootos.context.edge.Edge;
-import io.github.artemget.pootos.context.graph.Graph;
+import io.github.artemget.pootos.context.graph.GraphView;
 import io.github.artemget.pootos.context.node.Node;
 
 /**
  * A durable store of content-addressed nodes and typed edges.
  *
  * <p>Writing is idempotent: persisting the same node or edge twice leaves a
- * single copy. The whole store is read back as a {@link Graph}.</p>
+ * single copy. The whole store is read back as a {@link GraphView}, so readers
+ * traverse the persisted structure without reaching into a graph.</p>
  *
  * @since 0.0.1
  */
@@ -57,8 +58,8 @@ public interface GraphStore {
     /**
      * Read the whole persisted graph.
      *
-     * @return Graph of every stored node and edge
+     * @return View of every stored node and edge
      * @throws StoreException When the store cannot be read
      */
-    Graph load() throws StoreException;
+    GraphView load() throws StoreException;
 }

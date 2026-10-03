@@ -27,7 +27,7 @@ package io.github.artemget.pootos.context.store;
 import io.github.artemget.pootos.context.edge.Edge;
 import io.github.artemget.pootos.context.edge.Relation;
 import io.github.artemget.pootos.context.edge.TypedEdge;
-import io.github.artemget.pootos.context.graph.Graph;
+import io.github.artemget.pootos.context.graph.GraphView;
 import io.github.artemget.pootos.context.graph.MemoryGraph;
 import io.github.artemget.pootos.context.node.Node;
 import io.github.artemget.pootos.context.node.NodeId;
@@ -111,7 +111,7 @@ public final class SqliteGraphStore implements GraphStore {
     }
 
     @Override
-    public Graph load() throws StoreException {
+    public GraphView load() throws StoreException {
         try {
             this.schema();
             return new MemoryGraph(this.nodes(), this.edges());
