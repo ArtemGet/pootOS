@@ -327,8 +327,8 @@ interface Sandbox {
 
 ### 7.7 Пакеты `pootos-context`
 
-- `io.github.artemget.pootos.context.node` — `Node`, `NodeId`, `LessonNode`, `Text`,
-  `EscapedText`, `HexDigest`;
+- `io.github.artemget.pootos.context.node` — `Node`, `NodeId`, `LessonNode`, `EscapedText`
+  (JSON-экранирующий `org.cactoos.Text`); примитивы текста и дайджестов — `org.cactoos.*`;
 - `io.github.artemget.pootos.context.edge` — `Edge`, `TypedEdge`, `Relation`;
 - `io.github.artemget.pootos.context.graph` — `Graph`, `MemoryGraph`.
 
@@ -577,7 +577,7 @@ Orchestrator → трек + отчёт Owner
    + зоны.
 5. **Block 3 — sandbox:** `Sandbox` SPI + `docker+runsc` (изолированный shell, маунты).
 6. **Block 4 — providers + agent runtime:** `ModelRef` per-agent, шаблоны, скилы, субагенты.
-7. **Block 5 — system agent:** config-write, hot-reload, secret-запрос → RED.
+7. **Block 5 — system agent:** config-write, hot-reload, секрет-запрос → RED.
 8. **Block 6 — github + review agent:** вебхук → EO-ревью → метка (dogfooding PR субагентов).
 9. **Block 7 — ui-api + web:** канвас (зоны/карточки/агенты), дашборд ресурсов, чат.
 10. **Block 8 — docs:** en + zh-CN; auditor.
