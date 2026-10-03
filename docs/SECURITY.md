@@ -24,7 +24,7 @@ Plus the standard EO quality gates (Qulice, jtcop, JaCoCo/PIT) from `AGENTS.md` 
 |---|---|---|---|
 | Dependency vulnerabilities | `osv-scanner` (keyless, queries the OSV database) | any reported vulnerability | CI |
 | Secrets/credentials | `gitleaks` (`detect`, incl. `--no-git` sweep) | any finding | pre-commit + CI |
-| PII | a configurable scanner (regex set for email/phone/IBAN/card + allowlist) | any finding outside the allowlist | CI |
+| PII | `tools/pii-scan.py` (regex set for email/phone/IBAN/card + allowlist) | any finding outside the allowlist | CI |
 | PII in logs | centralized redaction + log scan | any unredacted hit | CI |
 
 - Gates run in **CI** on every push/PR, and SHOULD run locally before commit.

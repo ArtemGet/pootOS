@@ -1,0 +1,14 @@
+# pootOS PII scan allowlist.
+#
+# One entry per line:  path:<glob>  or  pattern:<regex>
+# Every entry MUST carry a comment (inline after '#', or on the line above)
+# stating why it is safe. A blanket disable is not allowed; see
+# docs/SECURITY.md §4 and AGENTS.md §3.
+
+# The scanner source itself contains the regexes for e-mail/phone/IBAN/card,
+# which look like the very data it hunts for (#5).
+path:tools/pii-scan.py
+
+# This file names the scanner patterns and is scanned like any other file
+# (#5).
+path:tools/pii-allowlist.txt

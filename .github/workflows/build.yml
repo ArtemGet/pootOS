@@ -38,3 +38,10 @@ jobs:
           scan-args: |-
             --recursive
             ./
+
+  pii:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PII scan
+        run: python3 tools/pii-scan.py
