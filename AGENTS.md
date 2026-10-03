@@ -102,13 +102,16 @@ Each module is a Maven module with its own `src/main/java` and `src/test/java`.
 ## 5. Process (ticket-first)
 
 1. **No work without a ticket.** A ticket is a complaint with a minimal reproduction.
-2. Branch named after the issue, off `main`; never commit to `main` directly.
-3. Start with a failing test that reproduces the problem.
-4. Smallest change that makes it pass; one concern per PR; small PRs.
-5. Commit subject starts with `#<issue>`; no history rewrite (no force-push, no amend on
+2. **When you take an issue, mark it `in-progress`.** Immediately apply the `in-progress` label
+   via `github_issue_write` (method `update`, `labels: ["in-progress"]`). Remove it when the PR is
+   merged or the issue is closed.
+3. Branch named after the issue, off `main`; never commit to `main` directly.
+4. Start with a failing test that reproduces the problem.
+5. Smallest change that makes it pass; one concern per PR; small PRs.
+6. Commit subject starts with `#<issue>`; no history rewrite (no force-push, no amend on
    shared branches).
-6. PR body: `Closes #N`, `What` / `Why` / `How` / `Test plan` (the exact gate command).
-7. Address **every** review comment: nits fixed in this PR, larger items become a linked
+7. PR body: `Closes #N`, `What` / `Why` / `How` / `Test plan` (the exact gate command).
+8. Address **every** review comment: nits fixed in this PR, larger items become a linked
    `Follow-up: #NNN`.
 
 ### PR size (decompose!)
@@ -117,34 +120,37 @@ Each module is a Maven module with its own `src/main/java` and `src/test/java`.
   A ~1000-line PR is a defect of decomposition, not a feature.
 - If a task cannot land in a small PR, **split it into multiple issues/subtasks** (and, if
   useful, a tracking epic) and open several PRs. Prefer a stack of small PRs over one big one.
-- The Orchestrator decomposes work; the author may return a task as "too big, here is the split".
 
 ### How agents write to GitHub (GitHub MCP)
 
-Local `git push` is **not** available non-interactively (no stored credential). Instead,
-**every agent has the GitHub MCP tools** and MUST use them directly:
+Local `git push` is **not** available non-interactively. Instead, **every agent has the GitHub
+MCP tools** and MUST use them directly:
 
-- coding agent: `github_create_branch` → `github_push_files` → `github_create_pull_request`;
+- coding agent: `github_issue_write` (labels) → `github_create_branch` → `github_push_files`
+  → `github_create_pull_request`;
 - review agent: `github_pull_request_read` (`get_files`/`get_diff`/`get_check_runs`),
   `github_pull_request_review_write`, `github_issue_write` (labels), and, on APPROVED,
-  `github_merge_pull_request`;
-- read/CI: `github_actions_list`, `github_actions_get`, `github_actions_run_trigger`.
-
-Never attempt a local `git push`. Reading files locally is fine (a synced clone); all remote
-mutations go through MCP.
+  `github_merge_pull_request`.
 
 ---
 
 ## 6. Review & merge
 
 - Reviews follow the EO reviewer playbook: correctness, tests, EO style, process, gates.
-- Read CI via the GitHub MCP (`github_actions_list` / `pull_request_read` →
-  `get_check_runs`); never call the GitHub API with a raw token.
+- **Wait for CI before merging.** A PR is mergeable only when **all required checks are complete
+  and green** (`build`, `secrets`, and any future gate). Read them via
+  `github_pull_request_read` → `get_check_runs` (or `github_actions_list`). If a check is
+  **pending/running**, poll in short intervals (do not hang indefinitely; a few bounded polls).
+  If any required check is **red or missing**, do **not** merge — report it.
 - Triage each finding: **nit** → fix in this PR; **larger** → separate issue.
 - In a single-account setup, GitHub forbids self-approve: the **label is the verdict**
   (`approved` / `needs-review`). Say nothing about the platform limit.
-- **The review agent merges itself** (`github_merge_pull_request`) **only on success.**
-  A red gate = no merge. Prefer a merge commit (no squash, no rebase) to preserve history.
+- **The review agent merges itself** (`github_merge_pull_request`) **only when the review passed
+  AND CI is green.** Prefer a merge commit (no squash, no rebase) to preserve history.
+- **Documentation PRs also get a short ARCHITECTURE review.** Besides wording/translation parity,
+  verify the docs match the actual code: module list (§4), package structure (§10), node/edge
+  model, gates. Flag any drift between the doc and the code as a finding.
+
 - Reviewer output shape:
 
   ```text
@@ -164,8 +170,7 @@ mutations go through MCP.
   `SecretRef` and never enters the context graph, prompts, or logs.
 - Never commit secrets; never log them; redaction is centralized.
 - **Never push logs, tokens, passwords, credentials, PII, or any data unrelated to the ticket.**
-  The secret/PII gates in §3 enforce this at build time. Do not add build logs or generated
-  artifacts to a commit.
+  The secret/PII gates in §3 enforce this at build time.
 
 ---
 
@@ -173,7 +178,8 @@ mutations go through MCP.
 
 - User-facing architecture is in **ru / en / zh-CN**: `docs/ARCHITECTURE.md` (ru canonical),
   `docs/ARCHITECTURE.en.md`, `docs/ARCHITECTURE.zh-CN.md`.
-- Keep translations in sync; a docs-auditor agent periodically verifies freshness.
+- Keep translations in sync; a docs-auditor agent periodically verifies freshness **and**
+  consistency with the code (§6).
 - Update `docs/ARCHITECTURE.md` whenever behavior/architecture changes.
 
 ---
@@ -182,8 +188,25 @@ mutations go through MCP.
 
 - **Orchestrator** (main agent): architecture, task decomposition, tracking, reporting.
   Writes no code.
-- **Coding subagent**: implements one subtask, leaves tests, keeps gates green, and opens the PR
-  itself via GitHub MCP.
-- **Review subagent**: independent review; applies the verdict label and merges on success
-  itself via GitHub MCP.
-- **Docs subagent**: keeps ru/en/zh-CN current.
+- **Coding subagent**: implements one subtask, leaves tests, keeps gates green, applies
+  `in-progress` on start, and opens the PR itself via GitHub MCP.
+- **Review subagent**: independent review; waits for green CI; applies the verdict label and
+  merges on success itself via GitHub MCP.
+- **Docs subagent**: keeps ru/en/zh-CN current (and inside the architecture review).
+- **Docs-auditor agent**: periodically checks docs freshness **and** consistency with code.
+
+---
+
+## 10. Code & package structure
+
+- One module per boundary (§4). **Inside a module, group types by concern into sub-packages** —
+  do not leave a growing flat package. A package that holds a handful of types is fine; once it
+  grows, split it.
+- For `pootos-context` the intended structure is:
+  - `…context.node` — `Node`, `NodeId`, `LessonNode`, text/identity helpers;
+  - `…context.edge` — `Edge`, `TypedEdge`, `Relation`;
+  - `…context.graph` — `Graph`, `MemoryGraph`, slice traversal;
+  - `…context.store` — persistence (later).
+- Public types carry Javadoc; package-info per package. Follow EO naming (no `-er`); name what the
+  object *is*.
+- When you add a type, place it in the concern package; do not extend a flat root package.
