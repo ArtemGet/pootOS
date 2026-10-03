@@ -1,0 +1,4 @@
+# pootOS secret-scan policy (AGENTS.md §3, docs/SECURITY.md §2).
+# Extend the gitleaks default ruleset; no allowlist is expected.
+[extend]
+useDefault = true
