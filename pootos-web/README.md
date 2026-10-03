@@ -8,14 +8,20 @@ This app is intentionally **not** part of the Maven reactor — it is a separate
 
 ## Status
 
-Skeleton only: local mock data, no backend integration, no real logic yet. The layout mirrors the
-planned UI:
+opencode-style dark theme (CSS variables in `src/theme.css`) plus a typed API client
+(`src/api.ts`). The layout mirrors the planned UI:
 
-- top bar with the single **System Agent** chat placeholder;
-- **attention zones** canvas (RED / YELLOW / GREEN);
-- **context graph** placeholder (React Flow);
-- **agent cards** panel;
-- **resource dashboard** placeholder.
+- top bar with the single **System Agent** chat placeholder and a backend health indicator;
+- **attention zones** canvas (RED / YELLOW / GREEN, tinted left borders);
+- **context graph** (React Flow), wired to `GET /api/graph`;
+- **agent cards** panel, wired to `GET /api/agents`;
+- **resource dashboard**, wired to `GET /api/resources`.
+
+### API client
+
+`src/api.ts` reads `VITE_API_URL` (default `http://localhost:8080`) and fetches the backend
+contract (`/api/health`, `/api/graph`, `/api/agents`, `/api/resources`). On any error the UI
+falls back to the mock data in `src/mock.ts`, so it renders with or without a backend.
 
 ## Requirements
 
