@@ -24,63 +24,53 @@
 
 package io.github.artemget.pootos.context.node;
 
-import java.util.Objects;
+import java.nio.charset.StandardCharsets;
+import org.cactoos.bytes.Sha256DigestOf;
+import org.cactoos.io.InputOf;
+import org.cactoos.text.HexOf;
+import org.cactoos.text.UncheckedText;
 
 /**
- * A first-class decision recorded in the context graph.
+ * A decorator that derives the content-addressed identity of a wrapped node
+ * from its canonical JSON.
+ *
+ * <p>Content addressing is defined once, here: the id is the SHA-256 hex
+ * digest of the wrapped node's {@link Node#json()}. Concrete node types
+ * compose this decorator instead of repeating the digest themselves.</p>
  *
  * @since 0.0.1
  */
-public final class DecisionNode implements Node {
+public final class HashedNode implements Node {
 
     /**
-     * The choice made.
+     * Wrapped node.
      */
-    private final String choice;
-
-    /**
-     * Rationale behind the choice.
-     */
-    private final String rationale;
+    private final Node origin;
 
     /**
      * Ctor.
      *
-     * @param choice The choice made
-     * @param rationale Rationale behind the choice
+     * @param origin Wrapped node
      */
-    public DecisionNode(final String choice, final String rationale) {
-        this.choice = choice;
-        this.rationale = rationale;
+    public HashedNode(final Node origin) {
+        this.origin = origin;
     }
 
     @Override
     public NodeId id() {
-        return new HashedNode(this).id();
-    }
-
-    @Override
-    public String json() {
-        return "{\"choice\":\"%s\",\"rationale\":\"%s\"}".formatted(
-            new EscapedText(this.choice).asString(),
-            new EscapedText(this.rationale).asString()
+        return new NodeId(
+            new UncheckedText(
+                new HexOf(
+                    new Sha256DigestOf(
+                        new InputOf(this.origin.json(), StandardCharsets.UTF_8)
+                    )
+                )
+            ).asString()
         );
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-            || obj instanceof DecisionNode node
-            && this.same(node);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.choice, this.rationale);
-    }
-
-    private boolean same(final DecisionNode other) {
-        return this.choice.equals(other.choice)
-            && this.rationale.equals(other.rationale);
+    public String json() {
+        return this.origin.json();
     }
 }
