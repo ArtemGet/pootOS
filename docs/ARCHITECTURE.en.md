@@ -9,7 +9,7 @@
 > is a secure application for Windows and macOS (Linux later) with minimal functionality:
 > safely running agents and solving a simple task (EO PR review).
 >
-> **Documentation languages:** ru (this file is the canon) · en (`ARCHITECTURE.en.md`) ·
+> **Documentation languages:** ru (the canon) · en (`ARCHITECTURE.en.md`) ·
 > zh-CN (`ARCHITECTURE.zh-CN.md`). Translations are maintained by a separate agent, and
 > freshness is periodically verified by an auditor agent (see §22).
 >
@@ -325,6 +325,27 @@ interface Sandbox {
   evidence, artifacts), not the raw dialogue, and continues from the break point.
 - The repair agent may have a different model.
 
+### 7.7 `pootos-context` packages
+
+- `io.github.artemget.pootos.context.node` — `Node`, `NodeId`, `LessonNode`, `Text`,
+  `EscapedText`, `HexDigest`;
+- `io.github.artemget.pootos.context.edge` — `Edge`, `TypedEdge`, `Relation`;
+- `io.github.artemget.pootos.context.graph` — `Graph`, `MemoryGraph`.
+
+### 7.8 Memory and recall (ADR-003, *proposed*)
+
+- **The source of truth is our own content-addressed graph** (`Task`/`Decision`/`Lesson` +
+  typed edges). Determinism is mandatory for the guarantee of the log of mistakes; a
+  probabilistic memory layer cannot provide it.
+- Memory is an **SPI**: `ContextGraph` + `Recall`. Persistence is SQLite; semantic recall is
+  pluggable (optional and replaceable).
+- **TencentDB Agent Memory is accepted as a DESIGN REFERENCE, not a runtime dependency:** we
+  borrow the idea of layered memory (conversation → atom → scenario → persona) and the
+  skill-asset/ACL model.
+- If an external recall/temporal engine behind the SPI is needed later, **Graphiti/Zep**
+  (a bitemporal knowledge graph) is considered first, and only then TencentDB.
+- Status — **proposed**; awaiting Owner confirmation. Details: `docs/adr/ADR-003-context-memory.md`.
+
 ---
 
 ## 8. Taxonomy of human-dependent tasks (R9)
@@ -360,6 +381,14 @@ The same agent runtime, with a privileged set of operations:
   the parent's. The parent is not blocked: a subagent is a separate actor.
 - Agent step: `read slice → query lessons → act → attach nodes → renew lease`. Each step is
   idempotent and logged.
+- **AgentExecutor (ADR-002):** "how to execute one agent turn" is a replaceable SPI
+  `AgentExecutor`; an agent is a durable actor whose turns are delegated to an executor. The
+  first adapter is **`OpenCodeExecutor`**: the kernel launches **opencode** (server/SDK)
+  **inside the sandbox**, projects a **context-graph slice** to the executor's input and
+  writes its outputs back as graph nodes. The choice of model/provider is through the
+  executor's config, but is **subordinate to pootOS leases and budgets**. The opencode
+  Node/TS runtime is **isolated in the sandbox** and is not a kernel dependency. A native
+  Java/EO executor behind the same SPI is possible later.
 - Agent configuration is **by hand or via the System Agent**.
 
 ---
@@ -463,6 +492,8 @@ Card(Task) ──► lease(net:egress, llm:*) ──► зона GREEN
 |---|---|---|
 | Backend | Java 25 (Loom), Maven, EO | virtual threads = hundreds of agents cheaply; EO style + gates |
 | Quality | Qulice 0.36, jtcop, JaCoCo/PIT | as in `teleroute`; fixed in the POM |
+| Agent executor | SPI `AgentExecutor`; `OpenCodeExecutor` adapter (opencode) in the sandbox | reuse opencode; the Node/TS runtime is **isolated** in the sandbox (ADR-002) |
+| Dependency gate | `google/osv-scanner` (keyless) | no secrets, self-contained CI; fails on high/critical (ADR-004) |
 | Scheduler | own event-sourced kernel (MVP); an SPI for Temporal later | lightweight local launch without a server |
 | Storage | SQLite (WAL) + blob-store | portable, without an external server |
 | Sandbox | Docker + gVisor (`runsc`) | R1/R15; cross-platform |
@@ -490,6 +521,8 @@ Card(Task) ──► lease(net:egress, llm:*) ──► зона GREEN
 - **Docker:** the socket belongs only to the kernel.
 - **Secrets:** keychain; **the agent does not read**; only `SecretRef`; log redaction.
 - **GitHub:** webhook HMAC, allowlist, minimal rights (read + comment/label).
+- **Dependencies:** the `google/osv-scanner` gate (keyless, OSV database) — the build fails on
+  high/critical vulnerabilities; without an API key or external secrets (ADR-004).
 - **Audit:** all actions are events (who, what, when, under which lease).
 
 ---
@@ -581,10 +614,17 @@ a restart; the package installs and runs on Windows and macOS.
 
 ---
 
-## 23. ADR drafts
+## 23. ADR (Architecture Decision Records)
 
-- ADR-001: gVisor vs Firecracker vs hardened Docker.
-- ADR-002: own kernel vs Temporal/Restate as substrate.
-- ADR-003: SQLite vs an embedded KV/LMDB for the graph and journal.
-- ADR-004: synchronization — git-dir vs Syncthing vs a sync server.
-- ADR-005: GitHub token — through the kernel proxy vs `SecretRef` into the container.
+The full list and index are in [`docs/adr/README.md`](adr/README.md).
+
+| ADR | Decision | Status |
+|---|---|---|
+| [ADR-001](adr/ADR-001-sandbox-isolation.md) | Sandbox isolation = Docker + gVisor | Accepted |
+| [ADR-002](adr/ADR-002-agent-executor.md) | Agents go through the SPI `AgentExecutor`; the first adapter is opencode | Accepted |
+| [ADR-003](adr/ADR-003-context-memory.md) | Memory = our content-addressed graph as the source of truth + external recall behind the SPI | Proposed |
+| [ADR-004](adr/ADR-004-dependency-vulnerability-gate.md) | Dependency gate = `osv-scanner` (keyless) | Accepted |
+
+Open (not yet drafted): the genesis of the kernel (own vs Temporal/Restate), the choice of
+storage (SQLite vs KV/LMDB), synchronization (git-dir vs Syncthing vs a sync server), the
+GitHub token (through the kernel proxy vs `SecretRef` into the container).
