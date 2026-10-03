@@ -1,8 +1,9 @@
 # AGENTS.md — working contract for agents in pootOS
 
 This file is the **contract** every coding/review agent follows. It encodes the project's
-architecture, its Elegant Objects (EO) rules, the build gates, and the review process.
-Read `docs/ARCHITECTURE.md` for the system design.
+architecture, its Elegant Objects (EO) rules, the build gates, the security gates, and the
+review process. Read `docs/ARCHITECTURE.md` for the system design and `docs/SECURITY.md`
+for the build-time security policy.
 
 > Language of this contract: English (tooling + code conventions). User-facing
 > documentation is maintained in **ru / en / zh-CN** (see §8).
@@ -38,6 +39,9 @@ Every Java class in `pootos-*` modules MUST:
 11. Every public method overrides an interface; keep interfaces short (≤3 methods).
 12. Fail fast with checked exceptions; never swallow, never catch-and-log; recover once at top.
 13. Javadoc on every public type/method (Qulice requires it); no inline narration.
+14. **Never commit or log anything not needed by the ticket** — no secrets, tokens, API keys,
+    passwords, private keys, `.env` files, credentials, personal data (PII), build logs, or
+    generated artifacts. Secret/PII/vulnerability gates fail the build if any slip in (§3).
 
 ### Tests
 
@@ -66,9 +70,19 @@ Full gate command (must be green before review):
 mvn --errors --batch-mode clean install -Pqulice -Pjtcop
 ```
 
-- Qulice **0.36** is mandatory and fails the build on style/design violations.
-- jtcop enforces test conventions.
-- JaCoCo/PIT coverage/mutation gates live in the POM and are binding.
+**Quality gates (mandatory, fail the build):**
+
+- Qulice **0.36** — style/design/EO violations.
+- jtcop — test conventions.
+- JaCoCo/PIT — coverage/mutation gates in the POM.
+
+**Security gates (mandatory, fail the build — see `docs/SECURITY.md`):**
+
+- **Dependency vulnerabilities** — scan dependencies; the build **fails** on a
+  high/critical vulnerability (CVSS ≥ 7).
+- **Secrets/credentials** — scan the working tree and history; the build **fails** if any
+  token/key/password is found.
+- **PII** — scan tracked files; the build **fails** on personal data leaking into the repo.
 
 Do **not** run a long foreground build blindly. If a check must run locally, run it with a
 timeout and a log file, and poll the tail.
@@ -95,6 +109,14 @@ Each module is a Maven module with its own `src/main/java` and `src/test/java`.
 6. PR body: `Closes #N`, `What` / `Why` / `How` / `Test plan` (the exact gate command).
 7. Address **every** review comment: nits fixed in this PR, larger items become a linked
    `Follow-up: #NNN`.
+
+### PR size (decompose!)
+
+- **A PR must be small and reviewable.** Target **≤ ~200 changed lines** and a single concern.
+  A ~1000-line PR is a defect of decomposition, not a feature.
+- If a task cannot land in a small PR, **split it into multiple issues/subtasks** (and, if
+  useful, a tracking epic) and open several PRs. Prefer a stack of small PRs over one big one.
+- The Orchestrator decomposes work; the author may return a task as "too big, here is the split".
 
 ### PRs and merging in this environment
 
@@ -133,6 +155,8 @@ writes, PR creation and merging go through the **GitHub MCP** tools:
   card to 🔴 RED for a human to supply; the secret is injected at the sandbox boundary as a
   `SecretRef` and never enters the context graph, prompts, or logs.
 - Never commit secrets; never log them; redaction is centralized.
+- **Never push logs, tokens, passwords, credentials, PII, or any data unrelated to the ticket.**
+  The secret/PII gates in §3 enforce this at build time.
 
 ---
 
