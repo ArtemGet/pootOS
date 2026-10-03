@@ -39,6 +39,7 @@
   <description>Agent Operating System: a sandboxed runtime for autonomous agents.</description>
   <modules>
     <module>pootos-context</module>
+    <module>pootos-agent</module>
   </modules>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
