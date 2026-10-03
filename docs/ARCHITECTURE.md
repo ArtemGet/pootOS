@@ -325,6 +325,13 @@ interface Sandbox {
   доказательства, артефакты), а не сырой диалог, и продолжает с точки разрыва.
 - Repair-агент может иметь иную модель.
 
+### 7.7 Пакеты `pootos-context`
+
+- `io.github.artemget.pootos.context.node` — `Node`, `NodeId`, `LessonNode`, `Text`,
+  `EscapedText`, `HexDigest`;
+- `io.github.artemget.pootos.context.edge` — `Edge`, `TypedEdge`, `Relation`;
+- `io.github.artemget.pootos.context.graph` — `Graph`, `MemoryGraph`.
+
 ---
 
 ## 8. Таксономия human-зависимых задач (R9)
