@@ -85,7 +85,8 @@ mvn --errors --batch-mode clean install -Pqulice -Pjtcop
 - **PII** — scan tracked files; the build **fails** on personal data leaking into the repo.
 
 Do **not** run a long foreground build blindly. If a check must run locally, run it with a
-timeout and a log file, and poll the tail.
+timeout and a log file, and poll the tail. On Windows the working tree MUST be LF
+(`.gitattributes` enforces this); a CRLF tree produces false Qulice line-ending violations.
 
 ---
 
@@ -118,25 +119,32 @@ Each module is a Maven module with its own `src/main/java` and `src/test/java`.
   useful, a tracking epic) and open several PRs. Prefer a stack of small PRs over one big one.
 - The Orchestrator decomposes work; the author may return a task as "too big, here is the split".
 
-### PRs and merging in this environment
+### How agents write to GitHub (GitHub MCP)
 
-Local `git push` is **not** available non-interactively (no stored token). All remote
-writes, PR creation and merging go through the **GitHub MCP** tools:
+Local `git push` is **not** available non-interactively (no stored credential). Instead,
+**every agent has the GitHub MCP tools** and MUST use them directly:
 
-- `github_create_branch`, `github_push_files`, `github_create_pull_request`,
-  `github_pull_request_read`, `github_pull_request_review_write`, `github_merge_pull_request`.
+- coding agent: `github_create_branch` → `github_push_files` → `github_create_pull_request`;
+- review agent: `github_pull_request_read` (`get_files`/`get_diff`/`get_check_runs`),
+  `github_pull_request_review_write`, `github_issue_write` (labels), and, on APPROVED,
+  `github_merge_pull_request`;
+- read/CI: `github_actions_list`, `github_actions_get`, `github_actions_run_trigger`.
+
+Never attempt a local `git push`. Reading files locally is fine (a synced clone); all remote
+mutations go through MCP.
 
 ---
 
 ## 6. Review & merge
 
 - Reviews follow the EO reviewer playbook: correctness, tests, EO style, process, gates.
-- Read CI via the GitHub MCP (`pull_request_read` → `get_check_runs`); never call the GitHub
-  API with a raw token.
+- Read CI via the GitHub MCP (`github_actions_list` / `pull_request_read` →
+  `get_check_runs`); never call the GitHub API with a raw token.
 - Triage each finding: **nit** → fix in this PR; **larger** → separate issue.
 - In a single-account setup, GitHub forbids self-approve: the **label is the verdict**
   (`approved` / `needs-review`). Say nothing about the platform limit.
-- **The reviewer merges only on success.** A red gate = no merge.
+- **The review agent merges itself** (`github_merge_pull_request`) **only on success.**
+  A red gate = no merge. Prefer a merge commit (no squash, no rebase) to preserve history.
 - Reviewer output shape:
 
   ```text
@@ -156,7 +164,8 @@ writes, PR creation and merging go through the **GitHub MCP** tools:
   `SecretRef` and never enters the context graph, prompts, or logs.
 - Never commit secrets; never log them; redaction is centralized.
 - **Never push logs, tokens, passwords, credentials, PII, or any data unrelated to the ticket.**
-  The secret/PII gates in §3 enforce this at build time.
+  The secret/PII gates in §3 enforce this at build time. Do not add build logs or generated
+  artifacts to a commit.
 
 ---
 
@@ -173,6 +182,8 @@ writes, PR creation and merging go through the **GitHub MCP** tools:
 
 - **Orchestrator** (main agent): architecture, task decomposition, tracking, reporting.
   Writes no code.
-- **Coding subagent**: implements one subtask, leaves tests, keeps gates green.
-- **Review subagent**: independent review; merges on success.
+- **Coding subagent**: implements one subtask, leaves tests, keeps gates green, and opens the PR
+  itself via GitHub MCP.
+- **Review subagent**: independent review; applies the verdict label and merges on success
+  itself via GitHub MCP.
 - **Docs subagent**: keeps ru/en/zh-CN current.
