@@ -24,7 +24,12 @@
 
 package io.github.artemget.pootos.context.node;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import org.cactoos.bytes.Sha256DigestOf;
+import org.cactoos.io.InputOf;
+import org.cactoos.text.HexOf;
+import org.cactoos.text.UncheckedText;
 
 /**
  * A first-class lesson of the journal of mistakes.
@@ -63,15 +68,23 @@ public final class LessonNode implements Node {
 
     @Override
     public NodeId id() {
-        return new NodeId(new HexDigest(this.json()).value());
+        return new NodeId(
+            new UncheckedText(
+                new HexOf(
+                    new Sha256DigestOf(
+                        new InputOf(this.json(), StandardCharsets.UTF_8)
+                    )
+                )
+            ).asString()
+        );
     }
 
     @Override
     public String json() {
         return "{\"advice\":\"%s\",\"confidence\":%s,\"trigger\":\"%s\"}".formatted(
-            new EscapedText(this.advice).value(),
+            new EscapedText(this.advice).asString(),
             this.confidence,
-            new EscapedText(this.trigger).value()
+            new EscapedText(this.trigger).asString()
         );
     }
 

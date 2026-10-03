@@ -24,6 +24,8 @@
 
 package io.github.artemget.pootos.context.node;
 
+import org.cactoos.Text;
+
 /**
  * Content-addressed identity of a node, a canonical hex string.
  *
@@ -46,7 +48,7 @@ public final class NodeId implements Text {
     }
 
     @Override
-    public String value() {
+    public String asString() {
         return this.hex;
     }
 
