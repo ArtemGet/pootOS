@@ -13,20 +13,23 @@ its own PRs.
 | Lesson / Task / Decision nodes | ✅ | content-addressed |
 | Cactoos primitives (no homegrown Text) | ✅ | PR #42 |
 | Memory spine (`ContextGraph`/`Recall` SPI) | 🟡 | graph core done; recall planned (ADR-003) |
-| Graph persistence (SQLite + event log) | ⬜ | critical path |
+| Graph persistence (SQLite + event log) | 🟡 | `GraphStore`/`SqliteGraphStore` (PR #51) |
 | Sandbox SPI | ✅ | `pootos-sandbox` |
-| Docker + gVisor sandbox adapter | ⬜ | critical path (ADR-001) |
+| Docker + gVisor sandbox adapter | 🟡 | `DockerSandbox` (PR #52) |
 | `AgentExecutor` SPI (+ Echo) | ✅ | `pootos-agent` (ADR-002) |
 | OpenCode executor adapter | ⬜ | depends on the sandbox adapter |
 | Kernel resource leases | ✅ | `pootos-kernel` |
-| Kernel actors + watchdog + budgets | ⬜ | |
+| Kernel watchdog + budgets | 🟡 | PR #50 |
+| Kernel actors + scheduler | ⬜ | |
 | **System Agent: manage LLM providers** (add main providers at runtime) | ⬜ | **MVP requirement** |
 | **MCP: connect & manage MCP servers at runtime** | ⬜ | **MVP requirement** |
+| **Inbound channels (GitHub webhooks) + binding config** (manual + System Agent) | ⬜ | **MVP requirement** (ADR-005) |
+| **Dispatcher agent** (untrusted parse, fraud checks, routing, custom prompt) | ⬜ | **MVP requirement** (ADR-005) |
 | System Agent: agent templates + hot-reload | ⬜ | |
 | Web UI: graph, agent cards, resource dashboard, zones | 🟡 | scaffold PR #41; wiring pending |
 | Reviewer + coder agent templates | ⬜ | EO skill |
 | Security gates (Qulice/jtcop/JaCoCo, gitleaks, osv, PII) | ✅ | CI |
-| Web CI (build the UI in CI) | ⬜ | follow-up |
+| Web CI (build the UI in CI) | ⬜ | follow-up #46 |
 
 ## 0.2.0
 
