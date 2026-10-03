@@ -42,6 +42,11 @@
     </dependency>
     <dependency>
       <groupId>io.github.artemget</groupId>
+      <artifactId>pootos-mcp</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.artemget</groupId>
       <artifactId>pootos-providers</artifactId>
       <version>${project.version}</version>
     </dependency>
