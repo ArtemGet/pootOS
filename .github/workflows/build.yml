@@ -32,16 +32,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '25'
-          cache: maven
       - name: Dependency check
-        run: |
-          KEY="${{ secrets.NVD_API_KEY }}"
-          if [ -n "$KEY" ]; then
-            mvn --batch-mode --no-transfer-progress org.owasp:dependency-check-maven:check -DnvdApiKey="$KEY"
-          else
-            mvn --batch-mode --no-transfer-progress org.owasp:dependency-check-maven:check
-          fi
+        uses: google/osv-scanner-action/osv-scanner-action@v1.9.1
+        with:
+          scan-args: |-
+            --recursive
+            ./
