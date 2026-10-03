@@ -91,6 +91,17 @@ final class LessonNodeTest {
     }
 
     @Test
+    void escapesMultilineAdviceInJson() {
+        MatcherAssert.assertThat(
+            "A multiline advice must not break the canonical JSON",
+            new LessonNode("boom", String.format("one%ctwo", 10), 0.5).json(),
+            Matchers.equalTo(
+                "{\"advice\":\"one\\ntwo\",\"confidence\":0.5,\"trigger\":\"boom\"}"
+            )
+        );
+    }
+
+    @Test
     void treatsEqualContentAsEqual() {
         MatcherAssert.assertThat(
             "Lessons with equal content must be equal",
