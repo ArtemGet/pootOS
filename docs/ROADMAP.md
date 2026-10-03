@@ -12,6 +12,8 @@ its own PRs.
 | Context graph (nodes/edges/slices) | ✅ | `pootos-context` |
 | Lesson / Task / Decision nodes | ✅ | content-addressed |
 | Cactoos primitives (no homegrown Text) | ✅ | PR #42 |
+| Provider SPI (`ModelProvider`) + OpenAI-compatible adapter | ✅ | `pootos-providers` (PR #62) |
+| MCP client SPI + JSON-RPC framing | ✅ | `pootos-mcp` (PR #64) |
 | Memory spine (`ContextGraph`/`Recall` SPI) | 🟡 | graph core done; recall planned (ADR-003) |
 | Graph persistence (SQLite + event log) | 🟡 | `GraphStore`/`SqliteGraphStore` (PR #51) |
 | Sandbox SPI | ✅ | `pootos-sandbox` |
@@ -21,11 +23,11 @@ its own PRs.
 | Kernel resource leases | ✅ | `pootos-kernel` |
 | Kernel watchdog + budgets | 🟡 | PR #50 |
 | Kernel actors + scheduler | ⬜ | |
-| **System Agent: manage LLM providers** (add main providers at runtime) | ⬜ | **MVP requirement** |
-| **MCP: connect & manage MCP servers at runtime** | ⬜ | **MVP requirement** |
+| **System Agent: manage LLM providers** (add main providers at runtime) | 🟡 | SPI done (`pootos-providers`); System-Agent wiring pending |
+| **MCP: connect & manage MCP servers at runtime** | 🟡 | client framing done (`pootos-mcp`); runtime wiring pending |
 | **Inbound channels (GitHub webhooks) + binding config** (manual + System Agent) | ⬜ | **MVP requirement** (ADR-005) |
 | **Dispatcher agent** (untrusted parse, fraud checks, routing, custom prompt) | ⬜ | **MVP requirement** (ADR-005) |
-| System Agent: agent templates + hot-reload | ⬜ | |
+| System Agent: agent templates + hot-reload | 🟡 | config files + watch + `SecretForm` (`pootos-system`, #68, ADR-006) |
 | Web UI: graph, agent cards, resource dashboard, zones | 🟡 | scaffold PR #41; wiring pending |
 | Reviewer + coder agent templates | ⬜ | EO skill |
 | Security gates (Qulice/jtcop/JaCoCo, gitleaks, osv, PII) | ✅ | CI |
