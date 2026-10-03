@@ -22,7 +22,7 @@ Plus the standard EO quality gates (Qulice, jtcop, JaCoCo/PIT) from `AGENTS.md` 
 
 | Gate | Tool (proposed) | Failure threshold | Phase |
 |---|---|---|---|
-| Dependency vulnerabilities | OWASP Dependency-Check (Maven plugin) | any **high/critical** (CVSS ≥ 7) | `verify` |
+| Dependency vulnerabilities | `osv-scanner` (keyless, queries the OSV database) | any reported vulnerability | CI |
 | Secrets/credentials | `gitleaks` (`detect`, incl. `--no-git` sweep) | any finding | pre-commit + CI |
 | PII | a configurable scanner (regex set for email/phone/IBAN/card + allowlist) | any finding outside the allowlist | CI |
 | PII in logs | centralized redaction + log scan | any unredacted hit | CI |
@@ -31,6 +31,9 @@ Plus the standard EO quality gates (Qulice, jtcop, JaCoCo/PIT) from `AGENTS.md` 
 - A **narrow, ticket-linked** allowlist is allowed (e.g. a test fixture email); a blanket
   disable is not. Every suppression names a ticket in a comment.
 - Tool choices are finalized in the security-gates ticket; this file is the policy of record.
+- The dependency gate is **keyless**: `osv-scanner` queries the public OSV database and needs
+  no API key or external secret. It runs as the `dependencies` CI job via the official
+  `google/osv-scanner-action` and **fails the job** when any known vulnerability is found.
 
 ---
 
@@ -39,7 +42,7 @@ Plus the standard EO quality gates (Qulice, jtcop, JaCoCo/PIT) from `AGENTS.md` 
 - Never commit or log: tokens, API keys, passwords, private keys, `.env` files, credentials,
   build logs, or **any data unrelated to the ticket**.
 - No PII of real people in tests, fixtures, docs, or commit messages — use synthetic data.
-- Do not add a dependency without checking it has no known critical CVE.
+- Do not add a dependency without checking `osv-scanner` reports no known vulnerability for it.
 - If a task genuinely needs a secret, do not embed it — raise a `SecretRequest` (card → 🔴 RED);
   the secret is injected at the sandbox boundary as a `SecretRef` and never enters the graph,
   prompts, or logs (`docs/ARCHITECTURE.md` §12).
@@ -55,7 +58,7 @@ ticket and the reason. CI shows all active suppressions in its summary so they a
 
 ## 5. Definition of done (security)
 
-- [ ] No dependency with a high/critical CVE.
+- [ ] No known vulnerable dependency (`osv-scanner` clean).
 - [ ] Secret scanner clean (working tree + history).
 - [ ] PII scanner clean (or allowlisted with a ticket).
 - [ ] No secrets/logs/PII in the diff.
