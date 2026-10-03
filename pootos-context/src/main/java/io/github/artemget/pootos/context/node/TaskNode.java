@@ -24,12 +24,7 @@
 
 package io.github.artemget.pootos.context.node;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
-import org.cactoos.bytes.Sha256DigestOf;
-import org.cactoos.io.InputOf;
-import org.cactoos.text.HexOf;
-import org.cactoos.text.UncheckedText;
 
 /**
  * A first-class unit of work of the context graph.
@@ -68,15 +63,7 @@ public final class TaskNode implements Node {
 
     @Override
     public NodeId id() {
-        return new NodeId(
-            new UncheckedText(
-                new HexOf(
-                    new Sha256DigestOf(
-                        new InputOf(this.json(), StandardCharsets.UTF_8)
-                    )
-                )
-            ).asString()
-        );
+        return new HashedNode(this).id();
     }
 
     @Override
