@@ -100,10 +100,10 @@ The canvas is the primary workspace. Three zones by the human's need for attenti
 | # | Requirement | Layer / solution | MVP |
 |---|---|---|---|
 | R1 | Real FS segmentation: the agent runs under a different root and cannot reach the data | Sandbox (Docker/gVisor), separate root, only explicit mounts | ✅ |
-| R2 | System Agent adds providers/tools/MCP | System Agent + config as data | ✅ |
+| R2 | System Agent adds providers/tools/MCP | System Agent + config files | ✅ |
 | R3 | Automatic agent configuration for skills/tools, different providers | Agent Templates + Provider SPI | ✅ |
 | R4 | Monitoring in the UI | Canvas (zones/cards) + resource dashboard | ✅ |
-| R5 | Dynamic control of the System Agent | Config graph + hot-reload | ✅ |
+| R5 | Dynamic control of the System Agent | Config files + hot-reload | ✅ |
 | R6 | Resources/timeouts; no deadlock of parallel agents | Resource Arbiter (leases) + Watchdog + Budgets | ✅ |
 | R7 | Work graph from the start | Context Graph: `Task` + DAG edges | ✅ |
 | R8 | Context is a graph, not a chat; an agent fixes another | Context Graph + repair-flow | ✅ basic |
@@ -114,7 +114,7 @@ The canvas is the primary workspace. Three zones by the human's need for attenti
 | R13 | Parallel agents without blocking the main loop | Virtual threads + scheduler; there is no main chat loop | ✅ |
 | R14 | Subagents with models different from the parent's | `ModelRef` per-agent | ✅ |
 | R15 | Isolated shell | PTY in the container | ✅ |
-| R16 | Configuration without a process restart | Versioned config nodes + resolver | ✅ |
+| R16 | Configuration without a process restart | Config files + watch resolver | ✅ |
 | R17 | A single main chat only for management | Owner ↔ System Agent; distribution without blocking | ✅ |
 | R18 | Safe self-configuration: configs — yes, tokens — no | Config-write without secret-read; secret request → RED | ✅ |
 
@@ -126,7 +126,7 @@ The canvas is the primary workspace. Three zones by the human's need for attenti
 2. **Isolation by default.** Access to the host/secrets is an explicit grant.
 3. **Everything is a resource with a lease.** GPU, ports, egress, provider rate-limit.
 4. **Durable by design.** An agent survives a restart (event-sourced).
-5. **Configuration is data.** Changed at runtime, versioned, rollback-able.
+5. **Configuration is files.** Changed at runtime, versioned, rollback-able (ADR-006).
 6. **Secrets are inviolable.** An agent may write config, but not read tokens.
 7. **Fail fast, recover once.**
 8. **Java core in EO style.** `final`, `private final`, constructors only assign, no
@@ -176,8 +176,9 @@ container, but not access to docker/host.
 | `pootos-sandbox-docker` | Docker + gVisor adapter |
 | `pootos-sandbox-process` | Dev adapter (no isolation; local only) |
 | `pootos-providers` | `ModelProvider` SPI + adapters |
-| `pootos-agent` | Agent runtime: templates, steps, skills, tools, MCP client |
-| `pootos-system` | System Agent (meta-operations over config/graph) |
+| `pootos-mcp` | MCP client: SPI + JSON-RPC framing, server connection |
+| `pootos-agent` | Agent runtime: templates, steps, skills, tools |
+| `pootos-system` | System Agent (meta-operations over config files/graph) |
 | `pootos-github` | Webhook intake, GitHub client, review flow |
 | `pootos-ui-api` | REST + WebSocket for the Web UI |
 | `pootos-skills` | Built-in skills (resources), e.g. EO-review |
@@ -185,7 +186,7 @@ container, but not access to docker/host.
 | `pootos-web` | Frontend (separate Vite build, not Maven) |
 
 The MVP starts with a subset: `kernel`, `context`, `sandbox`, `sandbox-docker`, `providers`,
-`agent`, `github`, `ui-api`, `cli`.
+`mcp`, `agent`, `github`, `ui-api`, `cli`.
 
 ---
 
@@ -226,11 +227,14 @@ The MVP starts with a subset: `kernel`, `context`, `sandbox`, `sandbox-docker`, 
 
 ### 5.5 Hot config (R16, R18)
 
-- Config consists of graph nodes (`Config`), versioned, content-addressed.
-- `ConfigResolver` atomically swaps the version (a decorator); providers/tools/templates
-  are re-read lazily, without a restart.
-- The System Agent changes config by mutating nodes; the kernel reacts by subscription.
-- **Separation of rights:** writing configs is allowed; **reading secrets is not** (see §12).
+- Configuration (providers, tools, MCP, templates, policies) is stored in **plain files** in a
+  config directory (`ConfigDirectory`/`ConfigFile`) — data, not graph nodes.
+- `ConfigWatcher` watches the files via `java.nio.file.WatchService` and triggers hot reload
+  without a restart; `ConfigResolver` serves the current configuration.
+- The System Agent changes config by writing files; the kernel applies the change on the watch
+  event.
+- **Separation of rights:** writing config files is allowed; **reading secrets is not**; files
+  hold only `SecretRef` references (see §12).
 
 ---
 
@@ -362,11 +366,14 @@ interface Sandbox {
 The same agent runtime, with a privileged set of operations:
 
 - `define_provider`, `define_tool`, `define_mcp`, `define_agent_template`, `define_skill`,
-  `set_policy`, `define_human_task_level`, `create_task`, `assign_agent`, `move_zone`.
-- Each operation = writing `Config`/`Template`/`Task` nodes; the kernel applies hot-reload.
+  `set_policy`, `define_human_task_level`, `create_task`, `assign_agent`, `move_zone`,
+  `secret_form`.
+- Each operation = writing a config file (data, not secrets); the kernel applies hot-reload.
 - **Accepts instructions from the main chat and distributes them without blocking its loop.**
 - **Self-configuration:** the System Agent configures itself and the pootOS application **via
-  agents** — but **does not read secrets** (see §12).
+  agents**; it presents a **`SecretForm`** (schema only, no values) while a **human** supplies the
+  value through the UI form → OS secret store; the agent and executor hold only `SecretRef`
+  (see §12).
 
 ---
 
@@ -406,16 +413,21 @@ The same agent runtime, with a privileged set of operations:
 
 The key separation ("fill the config — yes, obtain the token — no"):
 
-- **Config-write:** the System Agent/agents may create and edit configs (providers, tools,
-  MCP, templates) — those are graph data, not secrets.
-- **Secret-read:** access to tokens/keys is forbidden to agents. Storage — Windows
+- **Config-write:** the System Agent/agents may create and edit config files (providers, tools,
+  MCP, templates) — those are data, not secrets.
+- **Secret-read:** access to tokens/keys is forbidden to agents and executors. Storage — Windows
   Credential Manager / macOS Keychain.
+- **SecretForm:** the System Agent presents a **`SecretForm`** — the **schema** of the fields
+  (`SecretField{name, label, provider, purpose}`) **only, with no values**.
 - **Flow when a secret is needed:**
-  1. the agent forms a `SecretRequest` — the card moves to 🔴 RED;
-  2. the **human** enters/confirms the secret (never the agent);
-  3. the secret is supplied **at the sandbox boundary** (secret file/env), **not** into the
-     context graph, prompt or log (centralized redaction);
-  4. the `Config` receives a **reference** to the secret (`SecretRef`), not the value.
+  1. the System Agent declares a `SecretForm` — the card moves to 🔴 RED;
+  2. the **human** enters the values through the UI form; the values are written to the
+     **OS secret store** (never the agent);
+  3. the values **never** enter the context graph, config files, prompt or log (centralized
+     redaction); at the sandbox boundary there is only a `SecretRef`;
+  4. the `Config` (files) receives a **reference** to the secret (`SecretRef`), not the value.
+- **No agent/executor secret access:** neither the agent nor the `AgentExecutor` (opencode) reads
+  values; only the kernel resolves a `SecretRef` at injection time.
 - **GitHub token:** where possible it is passed **through the kernel** (the agent does not see
   the value); the alternative is a `SecretRef` at the sandbox boundary. The decision — ADR-005.
 
@@ -624,6 +636,8 @@ The full list and index are in [`docs/adr/README.md`](adr/README.md).
 | [ADR-002](adr/ADR-002-agent-executor.md) | Agents go through the SPI `AgentExecutor`; the first adapter is opencode | Accepted |
 | [ADR-003](adr/ADR-003-context-memory.md) | Memory = our content-addressed graph as the source of truth + external recall behind the SPI | Proposed |
 | [ADR-004](adr/ADR-004-dependency-vulnerability-gate.md) | Dependency gate = `osv-scanner` (keyless) | Accepted |
+| [ADR-005](adr/ADR-005-inbound-channels.md) | Untrusted inbound channels + dispatcher agent | Accepted |
+| [ADR-006](adr/ADR-006-config-and-secrets.md) | Config = files + filesystem watch; secrets via `SecretForm` | Accepted |
 
 Open (not yet drafted): the genesis of the kernel (own vs Temporal/Restate), the choice of
 storage (SQLite vs KV/LMDB), synchronization (git-dir vs Syncthing vs a sync server), the

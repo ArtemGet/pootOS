@@ -92,10 +92,10 @@
 | # | 需求 | 层 / 方案 | MVP |
 |---|---|---|---|
 | R1 | 真实的文件系统分段：智能体在其他 root 下运行，无法触及数据 | 沙箱（Docker/gVisor）、独立 root、仅显式挂载 | ✅ |
-| R2 | System Agent 添加提供方/工具/MCP | System Agent + 配置即数据 | ✅ |
+| R2 | System Agent 添加提供方/工具/MCP | System Agent + 配置文件 | ✅ |
 | R3 | 按技能/工具自动配置智能体，不同提供方 | Agent Templates + Provider SPI | ✅ |
 | R4 | UI 中的监控 | 画布（区域/卡片）+ 资源仪表盘 | ✅ |
-| R5 | 对系统智能体的动态控制 | 配置图 + hot-reload | ✅ |
+| R5 | 对系统智能体的动态控制 | 配置文件 + hot-reload | ✅ |
 | R6 | 资源/超时；并行智能体不死锁 | Resource Arbiter (leases) + Watchdog + Budgets | ✅ |
 | R7 | 从起点即工作图 | Context Graph: `Task` + DAG 边 | ✅ |
 | R8 | 上下文是图不是聊天；智能体修复另一个 | Context Graph + repair-flow | ✅ 基础 |
@@ -106,7 +106,7 @@
 | R13 | 并行智能体不阻塞主循环 | Virtual threads + scheduler；没有主聊天循环 | ✅ |
 | R14 | 拥有与父级不同模型的子智能体 | 每智能体 `ModelRef` | ✅ |
 | R15 | 隔离的 shell | 容器中的 PTY | ✅ |
-| R16 | 无需重启进程的配置 | 版本化配置节点 + resolver | ✅ |
+| R16 | 无需重启进程的配置 | 配置文件 + watch 解析器 | ✅ |
 | R17 | 仅用于管理的单一主聊天 | Owner ↔ System Agent；非阻塞分发 | ✅ |
 | R18 | 安全的自我配置：配置——可以，令牌——不行 | Config-write 无 secret-read；密钥请求 → RED | ✅ |
 
@@ -118,7 +118,7 @@
 2. **默认隔离。** 对主机/密钥的访问是显式授予。
 3. **一切皆带租约的资源。** GPU、端口、egress、提供方 rate-limit。
 4. **Durable by design。** 智能体经受重启（event-sourced）。
-5. **配置即数据。** 运行期更改、版本化、可回滚。
+5. **配置即文件。** 运行期更改、版本化、可回滚（ADR-006）。
 6. **密钥不可侵犯。** 智能体可以写配置，但不能读令牌。
 7. **Fail fast, recover once。**
 8. **EO 风格的 Java 核心。** `final`、`private final`、构造函数只赋值，
@@ -167,8 +167,9 @@
 | `pootos-sandbox-docker` | Docker + gVisor 适配器 |
 | `pootos-sandbox-process` | 开发适配器（无隔离；仅本地） |
 | `pootos-providers` | `ModelProvider` SPI + 适配器 |
-| `pootos-agent` | 智能体运行时：模板、步骤、技能、工具、MCP 客户端 |
-| `pootos-system` | System Agent（对配置/图的元操作） |
+| `pootos-mcp` | MCP 客户端：SPI + JSON-RPC framing、服务器连接 |
+| `pootos-agent` | 智能体运行时：模板、步骤、技能、工具 |
+| `pootos-system` | System Agent（对配置文件/图的元操作） |
 | `pootos-github` | webhook 接收、GitHub 客户端、审查流程 |
 | `pootos-ui-api` | 供 Web UI 的 REST + WebSocket |
 | `pootos-skills` | 内置技能（资源），如 EO-review |
@@ -176,7 +177,7 @@
 | `pootos-web` | 前端（独立的 Vite 构建，非 Maven） |
 
 MVP 从子集开始：`kernel`、`context`、`sandbox`、`sandbox-docker`、`providers`、
-`agent`、`github`、`ui-api`、`cli`。
+`mcp`、`agent`、`github`、`ui-api`、`cli`。
 
 ---
 
@@ -217,11 +218,12 @@ MVP 从子集开始：`kernel`、`context`、`sandbox`、`sandbox-docker`、`pro
 
 ### 5.5 Hot config (R16, R18)
 
-- 配置由图的节点（`Config`）构成，版本化、content-addressed。
-- `ConfigResolver` 原子地替换版本（装饰器）；提供方/工具/模板
-  惰性重读，无需重启。
-- System Agent 通过修改节点来更改配置；内核通过订阅做出反应。
-- **权限分离：** 允许写配置；**不允许读密钥**（见 §12）。
+- 配置（提供方、工具、MCP、模板、策略）存储在配置目录的**普通文件**中
+  （`ConfigDirectory`/`ConfigFile`）——这是数据，不是图节点。
+- `ConfigWatcher` 通过 `java.nio.file.WatchService` 监视文件并触发 hot reload，
+  无需重启；`ConfigResolver` 提供当前配置。
+- System Agent 通过写入文件来更改配置；内核在 watch 事件时应用更改。
+- **权限分离：** 允许写配置文件；**不允许读密钥**；文件中只有 `SecretRef` 引用（见 §12）。
 
 ---
 
@@ -351,11 +353,13 @@ interface Sandbox {
 与智能体相同的运行时，带有特权操作集：
 
 - `define_provider`、`define_tool`、`define_mcp`、`define_agent_template`、`define_skill`、
-  `set_policy`、`define_human_task_level`、`create_task`、`assign_agent`、`move_zone`。
-- 每个操作 = 写入 `Config`/`Template`/`Task` 节点；内核应用 hot-reload。
+  `set_policy`、`define_human_task_level`、`create_task`、`assign_agent`、`move_zone`、
+  `secret_form`。
+- 每个操作 = 写入配置文件（数据，不是密钥）；内核应用 hot-reload。
 - **从主聊天接受指令并分发它们，不阻塞自身循环。**
-- **自我配置：** System Agent 配置自身以及 pootOS 应用**通过智能体**——
-  但**不读取密钥**（见 §12）。
+- **自我配置：** System Agent 配置自身以及 pootOS 应用**通过智能体**；
+  它展示 **`SecretForm`**（仅字段模式，无值），而值由**人**通过 UI 表单
+  → OS secret store 提供；智能体与执行器只持有 `SecretRef`（见 §12）。
 
 ---
 
@@ -393,16 +397,20 @@ interface Sandbox {
 
 关键分离（“填写配置——可以，获取令牌——不行”）：
 
-- **Config-write：** System Agent/智能体可以创建和编辑配置（提供方、
-  工具、MCP、模板）——这些是图数据，不是密钥。
-- **Secret-read：** 对令牌/密钥的访问对智能体禁止。存储——Windows
+- **Config-write：** System Agent/智能体可以创建和编辑配置文件（提供方、
+  工具、MCP、模板）——这些是数据，不是密钥。
+- **Secret-read：** 对令牌/密钥的访问对智能体和执行器禁止。存储——Windows
   Credential Manager / macOS Keychain。
+- **SecretForm：** System Agent 展示 **`SecretForm`**——仅字段的**模式**
+  （`SecretField{name, label, provider, purpose}`），**无值**。
 - **需要密钥时的流程：**
-  1. 智能体形成 `SecretRequest`——卡片移到 🔴 RED；
-  2. **人**输入/确认密钥（绝不是智能体）；
-  3. 密钥**在沙箱边界**提供（secret file/env），**不**进入
-     上下文图、prompt 或日志（集中式脱敏）；
-  4. `Config` 获得对密钥的**引用**（`SecretRef`），而非值。
+  1. System Agent 声明 `SecretForm`——卡片移到 🔴 RED；
+  2. **人**通过 UI 表单输入值；值写入 **OS secret store**（绝不是智能体）；
+  3. 值**不**进入上下文图、配置文件、prompt 或日志（集中式脱敏）；
+     沙箱边界只有 `SecretRef`；
+  4. `Config`（文件）获得对密钥的**引用**（`SecretRef`），而非值。
+- **No agent/executor secret access：** 智能体与 `AgentExecutor`（opencode）都不读取值；
+  只有内核在注入时解析 `SecretRef`。
 - **GitHub 令牌：** 尽可能**通过内核**传递（智能体看不到值）；
   替代方案是沙箱边界的 `SecretRef`。决定——ADR-005。
 
@@ -611,6 +619,8 @@ Orchestrator → трек + отчёт Owner
 | [ADR-002](adr/ADR-002-agent-executor.md) | 智能体通过 SPI `AgentExecutor`；第一个适配器是 opencode | Accepted |
 | [ADR-003](adr/ADR-003-context-memory.md) | 记忆 = 我们的 content-addressed 图作为事实来源 + SPI 背后的外部召回 | Proposed |
 | [ADR-004](adr/ADR-004-dependency-vulnerability-gate.md) | 依赖门禁 = `osv-scanner`（keyless） | Accepted |
+| [ADR-005](adr/ADR-005-inbound-channels.md) | 不可信入站通道 + 调度智能体 | Accepted |
+| [ADR-006](adr/ADR-006-config-and-secrets.md) | 配置 = 文件 + filesystem watch；密钥通过 `SecretForm` | Accepted |
 
 开放（尚未起草）：kernel 的起源（自研 vs Temporal/Restate）、存储选择
 （SQLite vs KV/LMDB）、同步（git-dir vs Syncthing vs sync 服务器）、GitHub 令牌
