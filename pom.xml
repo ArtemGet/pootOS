@@ -72,16 +72,6 @@
             <groupId>com.qulice</groupId>
             <artifactId>qulice-maven-plugin</artifactId>
             <version>0.36.0</version>
-            <configuration combine.self="override">
-              <excludes>
-                <exclude>
-                  pmd:/src/test/java/io/github/artemget/pootos/.*
-                </exclude>
-                <exclude>
-                  xml:.*
-                </exclude>
-              </excludes>
-            </configuration>
             <executions>
               <execution>
                 <goals>
