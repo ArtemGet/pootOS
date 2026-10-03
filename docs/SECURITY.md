@@ -29,14 +29,15 @@ Plus the standard EO quality gates (Qulice, jtcop, JaCoCo/PIT) from `AGENTS.md` 
 
 - Gates run in **CI** on every push/PR, and SHOULD run locally before commit.
 - A **narrow, ticket-linked** allowlist is allowed (e.g. a test fixture email); a blanket
-  disable is not. Every suppression names a ticket in a comment.
+disable is not. Every suppression names a ticket in a comment.
 - Tool choices are finalized in the security-gates ticket; this file is the policy of record.
 
 ### CI secrets (optional)
 
-- **`NVD_API_KEY`** — optional repository secret consumed by the `dependencies` CI job
+- **`NVD_API_KEY`** — **optional** repository secret consumed by the `dependencies` CI job
   (`org.owasp:dependency-check-maven`). When set, the NVD API key raises the feed download rate
-  limit and shortens the scan; when unset the scan still runs at the anonymous rate limit.
+  limit and shortens the scan; when **unset or empty** the job degrades to the anonymous scan
+  (no key is passed) instead of failing — an empty secret is never exported as a broken key.
   Never hardcode the key; it is injected only as an environment variable in CI.
 
 ---
