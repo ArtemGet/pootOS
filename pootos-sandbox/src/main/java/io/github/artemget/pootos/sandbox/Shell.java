@@ -24,7 +24,7 @@
 
 package io.github.artemget.pootos.sandbox;
 
-import io.github.artemget.pootos.context.node.Text;
+import org.cactoos.Text;
 
 /**
  * A shell confined to a sandbox (ADR-001).

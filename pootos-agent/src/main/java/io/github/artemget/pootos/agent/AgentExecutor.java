@@ -24,6 +24,8 @@
 
 package io.github.artemget.pootos.agent;
 
+import org.cactoos.Text;
+
 /**
  * Runs one agent turn (ADR-002): a swappable strategy that turns a prompt into a result.
  *
@@ -38,5 +40,5 @@ public interface AgentExecutor {
      * @param prompt Input for the turn
      * @return Result of the turn
      */
-    AgentResult execute(AgentPrompt prompt);
+    Text execute(Text prompt);
 }

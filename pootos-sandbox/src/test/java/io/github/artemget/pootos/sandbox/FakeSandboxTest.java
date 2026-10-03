@@ -24,7 +24,7 @@
 
 package io.github.artemget.pootos.sandbox;
 
-import io.github.artemget.pootos.context.node.Text;
+import org.cactoos.text.TextOf;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -37,19 +37,25 @@ import org.junit.jupiter.api.Test;
 final class FakeSandboxTest {
 
     @Test
-    void returnsCannedOutput() {
+    void returnsCannedOutput() throws Exception {
         MatcherAssert.assertThat(
             "Fake sandbox must return its canned output",
-            new FakeSandbox((Text) () -> "pong").shell().exec((Text) () -> "ping").value(),
+            new FakeSandbox(new TextOf("pong"))
+                .shell()
+                .exec(new TextOf("ping"))
+                .asString(),
             Matchers.equalTo("pong")
         );
     }
 
     @Test
-    void returnsEmptyCannedOutput() {
+    void returnsEmptyCannedOutput() throws Exception {
         MatcherAssert.assertThat(
             "Fake sandbox must return an empty canned output",
-            new FakeSandbox((Text) () -> "").shell().exec((Text) () -> "ping").value(),
+            new FakeSandbox(new TextOf(""))
+                .shell()
+                .exec(new TextOf("ping"))
+                .asString(),
             Matchers.equalTo("")
         );
     }
