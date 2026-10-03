@@ -15,7 +15,7 @@ for the build-time security policy.
 An Agent Operating System: a sandboxed runtime for autonomous agents with a kernel
 (durable actors, resource leases, watchdogs), a context **graph** instead of per-task chat,
 attention zones (RED/YELLOW/GREEN), and a System Agent that configures everything at runtime.
-Backend: **Java 21, Elegant Objects, Maven**. Frontend: React + TypeScript.
+Backend: **Java 25 (latest LTS), Elegant Objects, Maven**. Frontend: React + TypeScript.
 
 The MVP task is an **EO code-review agent** on GitHub PR webhooks.
 
@@ -57,11 +57,11 @@ When you must deviate, state the reason in the ticket/PR. Never add a blanket
 
 ## 3. Build & gates
 
-JDK 21 is required (virtual threads). In this environment the default `java` is 17 — always
-point `JAVA_HOME` at the 21 install:
+**Java 25 (latest LTS)** is required (final virtual threads, Loom mature). In this environment
+the default `java` is 17 and there is no 25 on PATH — always point `JAVA_HOME` at the 25 install:
 
 ```powershell
-$env:JAVA_HOME = "C:\Users\Артем\.jdks\corretto-21.0.6"
+$env:JAVA_HOME = "C:\Users\Артем\.jdks\temurin-25"
 ```
 
 Full gate command (must be green before review):
