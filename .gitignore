@@ -1,0 +1,8 @@
+target/
+*.class
+.idea/
+.vscode/
+*.iml
+build*.log
+HELP.md
+.flattened-pom.xml
