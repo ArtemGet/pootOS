@@ -39,6 +39,7 @@
   <description>Agent Operating System: a sandboxed runtime for autonomous agents.</description>
   <modules>
     <module>pootos-context</module>
+    <module>pootos-mcp</module>
     <module>pootos-providers</module>
     <module>pootos-kernel</module>
     <module>pootos-agent</module>
