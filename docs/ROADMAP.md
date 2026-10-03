@@ -24,7 +24,7 @@ its own PRs.
 | Kernel watchdog + budgets | 🟡 | PR #50 |
 | Kernel actors + scheduler | ⬜ | |
 | **System Agent: manage LLM providers** (add main providers at runtime) | 🟡 | SPI done (`pootos-providers`); System-Agent wiring pending |
-| **MCP: connect & manage MCP servers at runtime** | 🟡 | client framing done (`pootos-mcp`); runtime wiring pending |
+| **MCP: connect & manage MCP servers at runtime** | 🟡 | framing + config management done (`pootos-mcp`, `McpConfig`/`ManagedMcp`); invocation pending |
 | **Inbound channels (GitHub webhooks) + binding config** (manual + System Agent) | ⬜ | **MVP requirement** (ADR-005) |
 | **Dispatcher agent** (untrusted parse, fraud checks, routing, custom prompt) | ⬜ | **MVP requirement** (ADR-005) |
 | System Agent: agent templates + hot-reload | 🟡 | config files + watch + `SecretForm` (`pootos-system`, #68, ADR-006) |
