@@ -24,7 +24,7 @@
 
 package io.github.artemget.pootos.kernel;
 
-import io.github.artemget.pootos.context.node.Text;
+import org.cactoos.Text;
 
 /**
  * A named resource of the kernel, such as {@code gpu:0} or {@code port:8080}.
@@ -48,7 +48,7 @@ public final class Resource implements Text {
     }
 
     @Override
-    public String value() {
+    public String asString() {
         return this.name;
     }
 

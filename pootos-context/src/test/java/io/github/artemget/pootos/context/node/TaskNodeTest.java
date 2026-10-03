@@ -24,6 +24,11 @@
 
 package io.github.artemget.pootos.context.node;
 
+import java.nio.charset.StandardCharsets;
+import org.cactoos.bytes.Sha256DigestOf;
+import org.cactoos.io.InputOf;
+import org.cactoos.text.HexOf;
+import org.cactoos.text.UncheckedText;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -60,9 +65,17 @@ final class TaskNodeTest {
             new TaskNode("deploy", "ship it", "open").id(),
             Matchers.equalTo(
                 new NodeId(
-                    new HexDigest(
-                        "{\"description\":\"ship it\",\"status\":\"open\",\"title\":\"deploy\"}"
-                    ).value()
+                    new UncheckedText(
+                        new HexOf(
+                            new Sha256DigestOf(
+                                new InputOf(
+                                    """
+                                    {"description":"ship it","status":"open","title":"deploy"}""",
+                                    StandardCharsets.UTF_8
+                                )
+                            )
+                        )
+                    ).asString()
                 )
             )
         );

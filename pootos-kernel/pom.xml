@@ -37,9 +37,8 @@
   <description>Kernel: actors, scheduler, resource leases, watchdog and budgets.</description>
   <dependencies>
     <dependency>
-      <groupId>io.github.artemget</groupId>
-      <artifactId>pootos-context</artifactId>
-      <version>0.0.1</version>
+      <groupId>org.cactoos</groupId>
+      <artifactId>cactoos</artifactId>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>

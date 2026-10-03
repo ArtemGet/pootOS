@@ -24,12 +24,12 @@
 
 package io.github.artemget.pootos.kernel;
 
-import io.github.artemget.pootos.context.node.Text;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.cactoos.Text;
 
 /**
  * An in-memory resource arbiter.
@@ -84,7 +84,7 @@ public final class InMemoryLeases implements Leases {
         if (current.filter(lease -> !lease.expired(this.clock)).isPresent()) {
             throw new LeaseException(
                 "Resource '%s' is held by another lease".formatted(
-                    resource.value()
+                    resource.asString()
                 )
             );
         }
@@ -92,7 +92,7 @@ public final class InMemoryLeases implements Leases {
             && !this.held.replace(resource, current.get(), fresh)) {
             throw new LeaseException(
                 "Resource '%s' is held by another lease".formatted(
-                    resource.value()
+                    resource.asString()
                 )
             );
         }
