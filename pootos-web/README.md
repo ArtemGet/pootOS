@@ -19,18 +19,19 @@ planned UI:
 
 ## Requirements
 
-- Node.js 20+ and npm.
+- Node.js **20.19+** or **22.12+** (Vite 7) and npm.
 
 ## Run
 
 ```bash
 cd pootos-web
-npm install
+npm ci           # reproducible install from the committed package-lock.json
 npm run dev      # dev server at http://localhost:5173
 npm run build    # type-check + production build into dist/
 npm run preview  # serve the production build
 ```
 
+Dependencies are pinned by the committed `package-lock.json`; CI uses `npm ci`.
 `node_modules/` and `dist/` are gitignored.
 
 ## Mapping to architecture
