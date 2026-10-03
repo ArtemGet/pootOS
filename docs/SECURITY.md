@@ -32,6 +32,13 @@ Plus the standard EO quality gates (Qulice, jtcop, JaCoCo/PIT) from `AGENTS.md` 
   disable is not. Every suppression names a ticket in a comment.
 - Tool choices are finalized in the security-gates ticket; this file is the policy of record.
 
+### CI secrets (optional)
+
+- **`NVD_API_KEY`** — optional repository secret consumed by the `dependencies` CI job
+  (`org.owasp:dependency-check-maven`). When set, the NVD API key raises the feed download rate
+  limit and shortens the scan; when unset the scan still runs at the anonymous rate limit.
+  Never hardcode the key; it is injected only as an environment variable in CI.
+
 ---
 
 ## 3. Rules for agents
