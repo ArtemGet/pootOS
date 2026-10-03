@@ -25,8 +25,9 @@
 package io.github.artemget.pootos.system;
 
 import io.github.artemget.pootos.system.config.ConfigException;
+import io.github.artemget.pootos.system.provider.ProviderEntry;
 import io.github.artemget.pootos.system.secret.SecretForm;
-import org.cactoos.Text;
+import java.util.Collection;
 
 /**
  * Configures the runtime without a restart, writing plain data only.
@@ -47,20 +48,21 @@ public interface SystemAgent {
     SecretForm secretForm();
 
     /**
-     * Record a provider endpoint in the config file.
+     * Record a provider, accumulating alongside the already defined ones.
      *
-     * @param name Provider name
-     * @param endpoint Provider endpoint
+     * <p>Redefining a name replaces that entry and keeps the others. Only
+     * non-secret data is stored; the key is a reference name.</p>
+     *
+     * @param entry Provider entry to record
      * @throws ConfigException When the config file cannot be written
      */
-    void defineProvider(Text name, Text endpoint) throws ConfigException;
+    void defineProvider(ProviderEntry entry) throws ConfigException;
 
     /**
-     * Read a recorded provider endpoint.
+     * List the configured providers.
      *
-     * @param name Provider name
-     * @return Provider endpoint, empty when absent
+     * @return Configured providers
      * @throws ConfigException When the config file cannot be read
      */
-    Text provider(Text name) throws ConfigException;
+    Collection<ProviderEntry> providers() throws ConfigException;
 }

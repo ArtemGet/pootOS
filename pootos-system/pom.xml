@@ -41,6 +41,11 @@
       <artifactId>cactoos</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.github.artemget</groupId>
+      <artifactId>pootos-providers</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
       <version>${junit.version}</version>

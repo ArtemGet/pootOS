@@ -22,37 +22,53 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.system.config;
+package io.github.artemget.pootos.system.provider;
 
 import org.cactoos.Text;
 
 /**
- * A named configuration file holding plain data only.
+ * A non-secret description of one configured model provider.
+ *
+ * <p>An entry carries only plain data: the provider name, its kind, the base
+ * URL and the default model, plus the name of the {@code SecretRef} that will
+ * hold the key. It never carries a secret value.</p>
  *
  * @since 0.0.1
  */
-public interface ConfigFile {
+public interface ProviderEntry {
 
     /**
-     * Read the whole file.
+     * Provider name used to reference it.
      *
-     * @return File content
-     * @throws ConfigException When the file cannot be read
+     * @return Provider name
      */
-    Text read() throws ConfigException;
+    Text name();
 
     /**
-     * Write the whole file.
+     * Provider kind selecting the adapter.
      *
-     * @param data Content to write
-     * @throws ConfigException When the file cannot be written
+     * @return Provider kind
      */
-    void write(Text data) throws ConfigException;
+    Text kind();
 
     /**
-     * Whether the file already exists.
+     * Base URL of the provider endpoint.
      *
-     * @return True when the file is present
+     * @return Base URL
      */
-    boolean exists();
+    Text base();
+
+    /**
+     * Default model of the provider.
+     *
+     * @return Default model
+     */
+    Text model();
+
+    /**
+     * Name of the secret reference holding the key.
+     *
+     * @return Secret reference name
+     */
+    Text key();
 }

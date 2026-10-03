@@ -22,37 +22,9 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.system.config;
-
-import org.cactoos.Text;
-
 /**
- * A named configuration file holding plain data only.
+ * Tests for the configured provider package.
  *
  * @since 0.0.1
  */
-public interface ConfigFile {
-
-    /**
-     * Read the whole file.
-     *
-     * @return File content
-     * @throws ConfigException When the file cannot be read
-     */
-    Text read() throws ConfigException;
-
-    /**
-     * Write the whole file.
-     *
-     * @param data Content to write
-     * @throws ConfigException When the file cannot be written
-     */
-    void write(Text data) throws ConfigException;
-
-    /**
-     * Whether the file already exists.
-     *
-     * @return True when the file is present
-     */
-    boolean exists();
-}
+package io.github.artemget.pootos.system.provider;
