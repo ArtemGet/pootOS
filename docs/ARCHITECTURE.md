@@ -4,7 +4,7 @@
 > ресурсов, контекст-граф вместо per-task чата и системный агент, управляющий всем
 > в рантайме.
 >
-> Документ фиксирует архитектуру, технологии и функционал. Язык бэкенда — Java 21
+> Документ фиксирует архитектуру, технологии и функционал. Язык бэкенда — Java 25
 > (Elegant Objects), фронтенд — React + TypeScript. Первая цель — защищённое приложение
 > под Windows и macOS (Linux позже) с минимальным функционалом: безопасно запускать
 > агентов и решать простую задачу (EO-ревью PR).
@@ -12,6 +12,8 @@
 > **Языки документации:** ru (этот файл — канон) · en (`ARCHITECTURE.en.md`) ·
 > zh-CN (`ARCHITECTURE.zh-CN.md`). Переводы ведутся отдельным агентом, актуальность
 > периодически проверяется агентом-аудитором (см. §22).
+>
+> ru (этот файл) · [en](ARCHITECTURE.en.md) · [zh-CN](ARCHITECTURE.zh-CN.md)
 
 ---
 
@@ -86,7 +88,7 @@
 
 ### 0.7 Ограничения
 
-- Бэкенд Java 21, Maven, EO-стиль, гейты Qulice 0.36 + jtcop + JaCoCo/PIT.
+- Бэкенд Java 25, Maven, EO-стиль, гейты Qulice 0.36 + jtcop + JaCoCo/PIT.
 - Изоляция — Docker + gVisor (`runsc`). Windows требует WSL2-бэкенд Docker.
 - Web UI — React + TS; desktop (Kotlin Multiplatform/Compose) — позже.
 - GitHub — один аккаунт ⇒ вердикт ревью выражается **меткой** (`approved`), не Approve.
@@ -142,7 +144,7 @@
 └───────────────────────────▲───────────────────────────────────┘
               REST + WebSocket │
 ┌───────────────────────────┴───────────────────────────────────┐
-│ pootOS-kernel (Java 21)                                        │
+│ pootOS-kernel (Java 25)                                        │
 │  Actors · Scheduler · Resource Arbiter · Watchdog · Budgets    │
 │  ConfigResolver (hot) · Event Log · Repair-flow · Zones        │
 ├───────────────────────────────────────────────────────────────┤
@@ -459,7 +461,7 @@ Card(Task) ──► lease(net:egress, llm:*) ──► зона GREEN
 
 | Слой | Выбор | Почему |
 |---|---|---|
-| Бэкенд | Java 21 (Loom), Maven, EO | virtual threads = сотни агентов дёшево; EO-стиль + гейты |
+| Бэкенд | Java 25 (Loom), Maven, EO | virtual threads = сотни агентов дёшево; EO-стиль + гейты |
 | Качество | Qulice 0.36, jtcop, JaCoCo/PIT | как в `teleroute`; зафиксировано в POM |
 | Планировщик | свой event-sourced kernel (MVP); SPI под Temporal позже | лёгкий локальный запуск без сервера |
 | Хранение | SQLite (WAL) + blob-store | портативно, без внешнего сервера |
@@ -472,8 +474,8 @@ Card(Task) ──► lease(net:egress, llm:*) ──► зона GREEN
 
 ### 16.1 Рабочее окружение (проверено)
 
-- git 2.43 · Maven 3.9.9 · Docker 28.5 · **JDK 21 = `C:\Users\Артем\.jdks\corretto-21.0.6`**
-  (по умолчанию в PATH JDK 17 — для сборки задавать `JAVA_HOME` на 21).
+- git 2.43 · Maven 3.9.9 · Docker 28.5 · **JDK 25 = `C:\Users\Артем\.jdks\temurin-25`**
+  (по умолчанию в PATH JDK 17 — для сборки задавать `JAVA_HOME` на 25).
 - `gh` не установлен; **локальный `git push` без интерактива невозможен** (нет
   сохранённого токена) ⇒ удалённые записи и PR/merge идут **через GitHub MCP**.
   Опционально: выдать fine-grained PAT для прямого `git push` субагентов (см. §22).
@@ -517,7 +519,7 @@ Card(Task) ──► lease(net:egress, llm:*) ──► зона GREEN
 ```
 Owner → главный чат → Orchestrator
 Orchestrator → подзадача → Coding subagent (локальный клон, ветка)
-        → build `mvn --errors --batch-mode clean install -Pqulice -Pjtcop` (JAVA_HOME=21)
+        → build `mvn --errors --batch-mode clean install -Pqulice -Pjtcop` (JAVA_HOME=25)
         → PR (через GitHub MCP)
         → Review subagent (по EO-плейбуку)
         → если ОК: Review subagent мержит; иначе: замечания → новый цикл
@@ -537,7 +539,7 @@ Orchestrator → трек + отчёт Owner
 ## 20. Roadmap / MVP-срез
 
 1. **Thinking** (сейчас): этот документ. ✅
-2. **Block 0 — scaffold:** родительский POM (Java 21, Qulice 0.36, jtcop, JaCoCo),
+2. **Block 0 — scaffold:** родительский POM (Java 25, Qulice 0.36, jtcop, JaCoCo),
    `.gitignore`, `LICENSE`, `README`, CI-workflow; зелёный build с тривиальным модулем.
 3. **Block 1 — context:** узлы/рёбра/срезы/content-addressing/компакция + `Lesson`.
 4. **Block 2 — kernel:** акторы на virtual threads + event log + leases + watchdog + budgets
@@ -572,7 +574,7 @@ Orchestrator → трек + отчёт Owner
 1. **PAT для git:** выдать fine-grained PAT (contents: read/write) для прямого `git push`
    субагентов — или оставляем коммиты через GitHub MCP? (Рекомендую PAT: автономность
    завода разработки выше.)
-2. **JDK 21:** подтвердить использование `corretto-21.0.6` (в PATH сейчас 17).
+2. **JDK 25:** подтвердить использование `temurin-25` (в PATH сейчас 17).
 3. **Ограничения MVP по sandbox:** нужен ли негативный тест изоляции в DoD как блокирующий.
 4. **Языковой канон:** оставить `ru` каноном (рекомендую), или канон — `en`?
 
