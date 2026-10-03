@@ -24,29 +24,41 @@
 
 package io.github.artemget.pootos.mcp;
 
+import org.cactoos.list.ListOf;
+import org.cactoos.text.TextOf;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Test;
+
 /**
- * Signals that a frame could not be exchanged with an MCP server.
+ * Test case for {@link StdioCommand}.
  *
  * @since 0.0.1
  */
-public final class McpException extends Exception {
+final class StdioCommandTest {
 
-    /**
-     * Ctor.
-     *
-     * @param message Failure reason
-     */
-    public McpException(final String message) {
-        this(message, null);
+    @Test
+    void yieldsProgramThenArguments() {
+        MatcherAssert.assertThat(
+            "A command must expose its program followed by its arguments",
+            new ListOf<>(
+                new StdioCommand(
+                    new TextOf("python"),
+                    new ListOf<>(new TextOf("-u"), new TextOf("server.py"))
+                )
+            ),
+            Matchers.contains("python", "-u", "server.py")
+        );
     }
 
-    /**
-     * Ctor.
-     *
-     * @param message Failure reason
-     * @param cause Underlying failure
-     */
-    public McpException(final String message, final Throwable cause) {
-        super(message, cause);
+    @Test
+    void yieldsOnlyProgramWhenNoArguments() {
+        MatcherAssert.assertThat(
+            "A command without arguments must expose only its program",
+            new ListOf<>(
+                new StdioCommand(new TextOf("server"), new ListOf<>())
+            ),
+            Matchers.contains("server")
+        );
     }
 }
