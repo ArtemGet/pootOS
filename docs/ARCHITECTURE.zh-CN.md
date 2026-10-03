@@ -315,6 +315,26 @@ interface Sandbox {
   证据、产物），而非原始对话，并从断点继续。
 - Repair 智能体可以拥有不同的模型。
 
+### 7.7 `pootos-context` 包
+
+- `io.github.artemget.pootos.context.node` — `Node`、`NodeId`、`LessonNode`、`Text`、
+  `EscapedText`、`HexDigest`；
+- `io.github.artemget.pootos.context.edge` — `Edge`、`TypedEdge`、`Relation`；
+- `io.github.artemget.pootos.context.graph` — `Graph`、`MemoryGraph`。
+
+### 7.8 记忆与召回 (ADR-003, *提议中*)
+
+- **事实来源是我们自己的 content-addressed 图**（`Task`/`Decision`/`Lesson` +
+  类型化边）。确定性的保证是问题日志所必需的；概率性记忆层无法提供。
+- 记忆是一个 **SPI**：`ContextGraph` + `Recall`。持久化为 SQLite；语义召回是
+  可插拔的（可选且可替换）。
+- **TencentDB Agent Memory 被接受为设计参考，而非运行时依赖：** 我们借用
+  分层记忆（conversation → atom → scenario → persona）的理念以及
+  skill-asset/ACL 模型。
+- 如果之后 SPI 背后需要外部召回/时序引擎，首先考虑 **Graphiti/Zep**
+  （双时序知识图），然后才是 TencentDB。
+- 状态——**proposed**；等待 Owner 确认。详情：`docs/adr/ADR-003-context-memory.md`。
+
 ---
 
 ## 8. 依赖人的任务分类 (R9)
@@ -350,6 +370,12 @@ interface Sandbox {
   父级。父级不被阻塞：子智能体是独立的 actor。
 - 智能体步骤：`read slice → query lessons → act → attach nodes → renew lease`。每一步
   幂等并记录日志。
+- **AgentExecutor (ADR-002)：**“如何执行智能体的一个回合”——可替换的 SPI
+  `AgentExecutor`；智能体是 durable actor，其回合委托给执行器。第一个适配器是
+  **`OpenCodeExecutor`**：内核在**沙箱内**启动 **opencode**（server/SDK），
+  将**上下文图切片**投射到执行器的输入，并把其输出写回为图节点。模型/提供方的选择
+  通过执行器的配置，但**从属于 pootOS 的租约和预算**。opencode 的 Node/TS 运行时
+  **隔离在沙箱中**，不是内核依赖。之后可在同一 SPI 背后实现原生 Java/EO 执行器。
 - 智能体配置——**手动或通过 System Agent**。
 
 ---
@@ -453,6 +479,8 @@ Card(Task) ──► lease(net:egress, llm:*) ──► зона GREEN
 |---|---|---|
 | 后端 | Java 25 (Loom), Maven, EO | virtual threads = 数百智能体成本低廉；EO 风格 + 门禁 |
 | 质量 | Qulice 0.36, jtcop, JaCoCo/PIT | 如 `teleroute`；固化在 POM 中 |
+| 智能体执行器 | SPI `AgentExecutor`；沙箱中的 `OpenCodeExecutor` 适配器 (opencode) | 复用 opencode；Node/TS 运行时**隔离**在沙箱中 (ADR-002) |
+| 依赖门禁 | `google/osv-scanner`（keyless） | 无密钥、自包含 CI；在 high/critical 时失败 (ADR-004) |
 | 调度器 | 自研 event-sourced kernel（MVP）；稍后为 Temporal 提供 SPI | 轻量本地启动，无需服务器 |
 | 存储 | SQLite (WAL) + blob-store | 可移植，无外部服务器 |
 | 沙箱 | Docker + gVisor (`runsc`) | R1/R15；跨平台 |
@@ -480,6 +508,8 @@ Card(Task) ──► lease(net:egress, llm:*) ──► зона GREEN
 - **Docker：** socket 仅属于内核。
 - **密钥：** keychain；**智能体不读取**；只有 `SecretRef`；日志脱敏。
 - **GitHub：** webhook HMAC、allowlist、最小权限（read + comment/label）。
+- **依赖：** `google/osv-scanner` 门禁（keyless，OSV 数据库）——构建在
+  high/critical 漏洞时失败；无需 API 密钥或外部密钥（ADR-004）。
 - **审计：** 所有操作即事件（谁、什么、何时、在哪个租约下）。
 
 ---
@@ -571,10 +601,17 @@ Orchestrator → трек + отчёт Owner
 
 ---
 
-## 23. ADR 草稿
+## 23. ADR (Architecture Decision Records)
 
-- ADR-001: gVisor vs Firecracker vs hardened Docker。
-- ADR-002: 自研 kernel vs Temporal/Restate 作为 substrate。
-- ADR-003: SQLite vs 嵌入式 KV/LMDB 用于图与日志。
-- ADR-004: 同步——git-dir vs Syncthing vs sync 服务器。
-- ADR-005: GitHub 令牌——通过内核代理 vs `SecretRef` 进容器。
+完整列表与索引见 [`docs/adr/README.md`](adr/README.md)。
+
+| ADR | 决策 | 状态 |
+|---|---|---|
+| [ADR-001](adr/ADR-001-sandbox-isolation.md) | 沙箱隔离 = Docker + gVisor | Accepted |
+| [ADR-002](adr/ADR-002-agent-executor.md) | 智能体通过 SPI `AgentExecutor`；第一个适配器是 opencode | Accepted |
+| [ADR-003](adr/ADR-003-context-memory.md) | 记忆 = 我们的 content-addressed 图作为事实来源 + SPI 背后的外部召回 | Proposed |
+| [ADR-004](adr/ADR-004-dependency-vulnerability-gate.md) | 依赖门禁 = `osv-scanner`（keyless） | Accepted |
+
+开放（尚未起草）：kernel 的起源（自研 vs Temporal/Restate）、存储选择
+（SQLite vs KV/LMDB）、同步（git-dir vs Syncthing vs sync 服务器）、GitHub 令牌
+（通过内核代理 vs `SecretRef` 进容器）。
