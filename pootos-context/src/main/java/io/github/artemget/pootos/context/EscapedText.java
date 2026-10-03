@@ -47,6 +47,33 @@ public final class EscapedText implements Text {
 
     @Override
     public String value() {
-        return this.source.replace("\\", "\\\\").replace("\"", "\\\"");
+        final StringBuilder out = new StringBuilder(this.source.length());
+        for (int pos = 0; pos < this.source.length(); ++pos) {
+            final char chr = this.source.charAt(pos);
+            if (chr == '\\') {
+                out.append("\\\\");
+            } else if (chr == '"') {
+                out.append("\\\"");
+            } else if (chr == '\b') {
+                out.append("\\b");
+            } else if (chr == '\f') {
+                out.append("\\f");
+            } else if (chr == '\n') {
+                out.append("\\n");
+            } else if (chr == '\r') {
+                out.append("\\r");
+            } else if (chr == '\t') {
+                out.append("\\t");
+            } else if (chr < 0x20) {
+                out.append("\\u")
+                    .append(Character.forDigit((chr >>> 12) & 0xF, 16))
+                    .append(Character.forDigit((chr >>> 8) & 0xF, 16))
+                    .append(Character.forDigit((chr >>> 4) & 0xF, 16))
+                    .append(Character.forDigit(chr & 0xF, 16));
+            } else {
+                out.append(chr);
+            }
+        }
+        return out.toString();
     }
 }
