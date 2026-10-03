@@ -29,7 +29,7 @@ Plus the standard EO quality gates (Qulice, jtcop, JaCoCo/PIT) from `AGENTS.md` 
 
 - Gates run in **CI** on every push/PR, and SHOULD run locally before commit.
 - A **narrow, ticket-linked** allowlist is allowed (e.g. a test fixture email); a blanket
-disable is not. Every suppression names a ticket in a comment.
+  disable is not. Every suppression names a ticket in a comment.
 - Tool choices are finalized in the security-gates ticket; this file is the policy of record.
 
 ### CI secrets (optional)
