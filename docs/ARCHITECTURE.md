@@ -332,6 +332,19 @@ interface Sandbox {
 - `io.github.artemget.pootos.context.edge` — `Edge`, `TypedEdge`, `Relation`;
 - `io.github.artemget.pootos.context.graph` — `Graph`, `MemoryGraph`.
 
+### 7.8 Память и recall (ADR-003, *предлагается*)
+
+- **Источник истины — наш собственный content-addressed граф** (`Task`/`Decision`/`Lesson` +
+  типизированные рёбра). Детерминизм обязателен для гарантии журнала косяков; вероятностный
+  слой памяти её дать не может.
+- Память — **SPI**: `ContextGraph` + `Recall`. Персистентность — SQLite; семантический
+  recall — подключаемый (опционально и сменяемо).
+- **TencentDB Agent Memory принят как DESIGN REFERENCE, а не runtime-зависимость**: заимствуем
+  идею многослойной памяти (conversation → atom → scenario → persona) и модель skill-asset/ACL.
+- Если позже понадобится внешний recall/temporal-движок за SPI, сначала рассматривается
+  **Graphiti/Zep** (битемпоральный knowledge graph), и лишь затем TencentDB.
+- Статус — **proposed**; ожидает подтверждения Owner. Детали: `docs/adr/ADR-003-context-memory.md`.
+
 ---
 
 ## 8. Таксономия human-зависимых задач (R9)
@@ -367,6 +380,13 @@ interface Sandbox {
   от родителя. Родитель не блокируется: субагент — отдельный актор.
 - Шаг агента: `read slice → query lessons → act → attach nodes → renew lease`. Каждый шаг
   идемпотентен и логируется.
+- **AgentExecutor (ADR-002):** «как выполнить один ход агента» — сменный SPI `AgentExecutor`;
+  агент — durable actor, чьи ходы делегируются исполнителю. Первый адаптер —
+  **`OpenCodeExecutor`**: ядро запускает **opencode** (server/SDK) **внутри песочницы**,
+  проецирует **срез контекст-графа** на вход исполнителю и записывает его выводы обратно
+  узлами графа. Выбор модели/провайдера — через конфиг исполнителя, но **подчинён лизам и
+  бюджетам** pootOS. Node/TS-рантайм opencode **изолирован в песочнице** и не является
+  зависимостью ядра. Позже возможен нативный Java/EO-исполнитель за тем же SPI.
 - Настройка агента — **руками или через System Agent**.
 
 ---
@@ -470,6 +490,8 @@ Card(Task) ──► lease(net:egress, llm:*) ──► зона GREEN
 |---|---|---|
 | Бэкенд | Java 25 (Loom), Maven, EO | virtual threads = сотни агентов дёшево; EO-стиль + гейты |
 | Качество | Qulice 0.36, jtcop, JaCoCo/PIT | как в `teleroute`; зафиксировано в POM |
+| Агент-исполнитель | SPI `AgentExecutor`; адаптер `OpenCodeExecutor` (opencode) в песочнице | переиспользуем opencode; Node/TS-рантайм **изолирован** в песочнице (ADR-002) |
+| Dependency gate | `google/osv-scanner` (keyless) | без секретов, self-contained CI; падает на high/critical (ADR-004) |
 | Планировщик | свой event-sourced kernel (MVP); SPI под Temporal позже | лёгкий локальный запуск без сервера |
 | Хранение | SQLite (WAL) + blob-store | портативно, без внешнего сервера |
 | Песочница | Docker + gVisor (`runsc`) | R1/R15; кроссплатформенно |
@@ -497,6 +519,8 @@ Card(Task) ──► lease(net:egress, llm:*) ──► зона GREEN
 - **Docker:** сокет только у ядра.
 - **Секреты:** keychain; **агент не читает**; только `SecretRef`; редакция логов.
 - **GitHub:** HMAC вебхука, allowlist, минимальные права (read + comment/label).
+- **Зависимости:** gate `google/osv-scanner` (keyless, база OSV) — сборка падает на
+  high/critical уязвимости; без API-ключа и внешних секретов (ADR-004).
 - **Аудит:** все действия — события (кто, что, когда, под какой лизой).
 
 ---
@@ -587,10 +611,17 @@ Orchestrator → трек + отчёт Owner
 
 ---
 
-## 23. Заготовки ADR
+## 23. ADR (Architecture Decision Records)
 
-- ADR-001: gVisor vs Firecracker vs hardened Docker.
-- ADR-002: свой kernel vs Temporal/Restate как substrate.
-- ADR-003: SQLite vs встроенный KV/LMDB для графа и журнала.
-- ADR-004: синхронизация — git-dir vs Syncthing vs sync-сервер.
-- ADR-005: GitHub-токен — через прокси ядра vs `SecretRef` в контейнер.
+Полный список и индекс — в [`docs/adr/README.md`](adr/README.md).
+
+| ADR | Решение | Статус |
+|---|---|---|
+| [ADR-001](adr/ADR-001-sandbox-isolation.md) | Изоляция песочницы = Docker + gVisor | Accepted |
+| [ADR-002](adr/ADR-002-agent-executor.md) | Агенты идут через SPI `AgentExecutor`; первый адаптер — opencode | Accepted |
+| [ADR-003](adr/ADR-003-context-memory.md) | Память = наш content-addressed граф как источник истины + внешний recall за SPI | Proposed |
+| [ADR-004](adr/ADR-004-dependency-vulnerability-gate.md) | Dependency gate = `osv-scanner` (keyless) | Accepted |
+
+Открытые (ещё не оформлены): генезис kernel (свой vs Temporal/Restate), выбор хранилища
+(SQLite vs KV/LMDB), синхронизация (git-dir vs Syncthing vs sync-сервер), GitHub-токен
+(через прокси ядра vs `SecretRef` в контейнер).
