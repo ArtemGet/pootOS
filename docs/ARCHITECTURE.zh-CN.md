@@ -317,8 +317,8 @@ interface Sandbox {
 
 ### 7.7 `pootos-context` 包
 
-- `io.github.artemget.pootos.context.node` — `Node`、`NodeId`、`LessonNode`、`Text`、
-  `EscapedText`、`HexDigest`；
+- `io.github.artemget.pootos.context.node` — `Node`、`NodeId`、`LessonNode`、`EscapedText`
+  （JSON 转义的 `org.cactoos.Text`）；文本与摘要原语来自 `org.cactoos.*`；
 - `io.github.artemget.pootos.context.edge` — `Edge`、`TypedEdge`、`Relation`；
 - `io.github.artemget.pootos.context.graph` — `Graph`、`MemoryGraph`。
 
