@@ -327,8 +327,8 @@ interface Sandbox {
 
 ### 7.7 `pootos-context` packages
 
-- `io.github.artemget.pootos.context.node` — `Node`, `NodeId`, `LessonNode`, `Text`,
-  `EscapedText`, `HexDigest`;
+- `io.github.artemget.pootos.context.node` — `Node`, `NodeId`, `LessonNode`, `EscapedText`
+  (a JSON-escaping `org.cactoos.Text`); text and digest primitives are `org.cactoos.*`;
 - `io.github.artemget.pootos.context.edge` — `Edge`, `TypedEdge`, `Relation`;
 - `io.github.artemget.pootos.context.graph` — `Graph`, `MemoryGraph`.
 

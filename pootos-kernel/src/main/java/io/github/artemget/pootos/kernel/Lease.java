@@ -24,8 +24,8 @@
 
 package io.github.artemget.pootos.kernel;
 
-import io.github.artemget.pootos.context.node.Text;
 import java.time.Clock;
+import org.cactoos.Text;
 
 /**
  * A granted right to use a resource for a bounded time.

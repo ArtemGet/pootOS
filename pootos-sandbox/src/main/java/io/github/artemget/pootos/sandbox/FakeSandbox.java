@@ -24,7 +24,7 @@
 
 package io.github.artemget.pootos.sandbox;
 
-import io.github.artemget.pootos.context.node.Text;
+import org.cactoos.Text;
 
 /**
  * A dev/test {@link Sandbox} that returns canned output without any real process.

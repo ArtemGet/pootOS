@@ -24,6 +24,8 @@
 
 package io.github.artemget.pootos.context.node;
 
+import org.cactoos.Text;
+
 /**
  * A text rendered as an escaped JSON string body.
  *
@@ -46,7 +48,7 @@ public final class EscapedText implements Text {
     }
 
     @Override
-    public String value() {
+    public String asString() {
         final StringBuilder out = new StringBuilder(this.source.length());
         for (int pos = 0; pos < this.source.length(); ++pos) {
             final char chr = this.source.charAt(pos);

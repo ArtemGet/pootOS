@@ -24,6 +24,7 @@
 
 package io.github.artemget.pootos.agent;
 
+import org.cactoos.text.TextOf;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -36,19 +37,19 @@ import org.junit.jupiter.api.Test;
 final class EchoExecutorTest {
 
     @Test
-    void echoesInput() {
+    void echoesInput() throws Exception {
         MatcherAssert.assertThat(
             "Executor must echo the prompt text",
-            new EchoExecutor().execute(new AgentPrompt("hello")).value(),
+            new EchoExecutor().execute(new TextOf("hello")).asString(),
             Matchers.equalTo("hello")
         );
     }
 
     @Test
-    void echoesEmptyInput() {
+    void echoesEmptyInput() throws Exception {
         MatcherAssert.assertThat(
             "Executor must echo empty input",
-            new EchoExecutor().execute(new AgentPrompt("")).value(),
+            new EchoExecutor().execute(new TextOf("")).asString(),
             Matchers.equalTo("")
         );
     }

@@ -39,7 +39,7 @@ final class NodeIdTest {
     void exposesHexValue() {
         MatcherAssert.assertThat(
             "NodeId must expose its canonical hex value",
-            new NodeId("abc123").value(),
+            new NodeId("abc123").asString(),
             Matchers.equalTo("abc123")
         );
     }

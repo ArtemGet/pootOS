@@ -24,6 +24,8 @@
 
 package io.github.artemget.pootos.agent;
 
+import org.cactoos.Text;
+
 /**
  * An {@link AgentExecutor} that echoes its input, usable without any model or sandbox.
  *
@@ -39,7 +41,7 @@ public final class EchoExecutor implements AgentExecutor {
     }
 
     @Override
-    public AgentResult execute(final AgentPrompt prompt) {
-        return new AgentResult(prompt.value());
+    public Text execute(final Text prompt) {
+        return prompt;
     }
 }

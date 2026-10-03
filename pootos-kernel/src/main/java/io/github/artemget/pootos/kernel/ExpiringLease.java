@@ -24,9 +24,9 @@
 
 package io.github.artemget.pootos.kernel;
 
-import io.github.artemget.pootos.context.node.Text;
 import java.time.Clock;
 import java.time.Instant;
+import org.cactoos.Text;
 
 /**
  * A lease that becomes invalid after a fixed moment in time.

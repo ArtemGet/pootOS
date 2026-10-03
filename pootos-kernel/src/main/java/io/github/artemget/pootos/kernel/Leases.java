@@ -24,7 +24,7 @@
 
 package io.github.artemget.pootos.kernel;
 
-import io.github.artemget.pootos.context.node.Text;
+import org.cactoos.Text;
 
 /**
  * The resource arbiter: hands out and revokes exclusive leases.

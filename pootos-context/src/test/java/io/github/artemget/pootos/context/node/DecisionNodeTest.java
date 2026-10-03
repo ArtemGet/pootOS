@@ -24,6 +24,11 @@
 
 package io.github.artemget.pootos.context.node;
 
+import java.nio.charset.StandardCharsets;
+import org.cactoos.bytes.Sha256DigestOf;
+import org.cactoos.io.InputOf;
+import org.cactoos.text.HexOf;
+import org.cactoos.text.UncheckedText;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -60,9 +65,16 @@ final class DecisionNodeTest {
             new DecisionNode("sqlite", "portable").id(),
             Matchers.equalTo(
                 new NodeId(
-                    new HexDigest(
-                        "{\"choice\":\"sqlite\",\"rationale\":\"portable\"}"
-                    ).value()
+                    new UncheckedText(
+                        new HexOf(
+                            new Sha256DigestOf(
+                                new InputOf(
+                                    "{\"choice\":\"sqlite\",\"rationale\":\"portable\"}",
+                                    StandardCharsets.UTF_8
+                                )
+                            )
+                        )
+                    ).asString()
                 )
             )
         );

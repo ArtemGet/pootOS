@@ -39,7 +39,7 @@ final class EscapedTextTest {
     void escapesDoubleQuote() {
         MatcherAssert.assertThat(
             "A double quote must be escaped",
-            new EscapedText("a\"b").value(),
+            new EscapedText("a\"b").asString(),
             Matchers.equalTo("a\\\"b")
         );
     }
@@ -48,7 +48,7 @@ final class EscapedTextTest {
     void escapesBackslash() {
         MatcherAssert.assertThat(
             "A backslash must be escaped",
-            new EscapedText("a\\b").value(),
+            new EscapedText("a\\b").asString(),
             Matchers.equalTo("a\\\\b")
         );
     }
@@ -57,7 +57,7 @@ final class EscapedTextTest {
     void escapesLineFeed() {
         MatcherAssert.assertThat(
             "A line feed must use its short escape",
-            new EscapedText(String.format("a%cb", 10)).value(),
+            new EscapedText(String.format("a%cb", 10)).asString(),
             Matchers.equalTo("a\\nb")
         );
     }
@@ -66,7 +66,7 @@ final class EscapedTextTest {
     void escapesTab() {
         MatcherAssert.assertThat(
             "A tab must use its short escape",
-            new EscapedText("a\tb").value(),
+            new EscapedText("a\tb").asString(),
             Matchers.equalTo("a\\tb")
         );
     }
@@ -75,7 +75,7 @@ final class EscapedTextTest {
     void escapesCarriageReturn() {
         MatcherAssert.assertThat(
             "A carriage return must use its short escape",
-            new EscapedText(String.format("a%cb", 13)).value(),
+            new EscapedText(String.format("a%cb", 13)).asString(),
             Matchers.equalTo("a\\rb")
         );
     }
@@ -84,7 +84,7 @@ final class EscapedTextTest {
     void escapesBackspace() {
         MatcherAssert.assertThat(
             "A backspace must use its short escape",
-            new EscapedText("a\bb").value(),
+            new EscapedText("a\bb").asString(),
             Matchers.equalTo("a\\bb")
         );
     }
@@ -93,7 +93,7 @@ final class EscapedTextTest {
     void escapesFormFeed() {
         MatcherAssert.assertThat(
             "A form feed must use its short escape",
-            new EscapedText("a\fb").value(),
+            new EscapedText("a\fb").asString(),
             Matchers.equalTo("a\\fb")
         );
     }
@@ -102,7 +102,7 @@ final class EscapedTextTest {
     void escapesOtherControlCharAsUnicode() {
         MatcherAssert.assertThat(
             "A control char without a short form must be \\u escaped",
-            new EscapedText(String.format("a%cb", 1)).value(),
+            new EscapedText(String.format("a%cb", 1)).asString(),
             Matchers.equalTo("a\\u0001b")
         );
     }
@@ -111,7 +111,7 @@ final class EscapedTextTest {
     void keepsPlainTextIntact() {
         MatcherAssert.assertThat(
             "Plain text must be left untouched",
-            new EscapedText("plain").value(),
+            new EscapedText("plain").asString(),
             Matchers.equalTo("plain")
         );
     }
