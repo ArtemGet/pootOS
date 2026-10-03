@@ -77,6 +77,16 @@ public final class MemoryGraph implements Graph {
     }
 
     @Override
+    public Collection<Node> nodes() {
+        return List.copyOf(this.nodes);
+    }
+
+    @Override
+    public Collection<Edge> edges() {
+        return List.copyOf(this.edges);
+    }
+
+    @Override
     public Graph with(final Node node) {
         final Map<NodeId, Node> merged = new LinkedHashMap<>();
         for (final Node existing : this.nodes) {

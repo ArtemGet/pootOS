@@ -37,6 +37,20 @@ import java.util.Collection;
 public interface Graph {
 
     /**
+     * Every node in this graph.
+     *
+     * @return Nodes of the graph
+     */
+    Collection<Node> nodes();
+
+    /**
+     * Every edge in this graph.
+     *
+     * @return Edges of the graph
+     */
+    Collection<Edge> edges();
+
+    /**
      * A new graph that also contains the given node.
      *
      * @param node Node to include
