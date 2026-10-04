@@ -46,7 +46,7 @@ import java.util.Set;
  *
  * @since 0.0.1
  */
-public final class MemoryGraph implements Graph {
+public final class MemoryGraph implements Graph, GraphView {
 
     /**
      * Content-addressed nodes.
@@ -74,6 +74,16 @@ public final class MemoryGraph implements Graph {
     public MemoryGraph(final Collection<Node> nodes, final Collection<Edge> edges) {
         this.nodes = nodes;
         this.edges = edges;
+    }
+
+    @Override
+    public Iterable<Node> nodes() {
+        return List.copyOf(this.nodes);
+    }
+
+    @Override
+    public Iterable<Edge> edges() {
+        return List.copyOf(this.edges);
     }
 
     @Override

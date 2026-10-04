@@ -22,44 +22,23 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context.store;
+package io.github.artemget.pootos.ui;
 
-import io.github.artemget.pootos.context.edge.Edge;
-import io.github.artemget.pootos.context.graph.GraphView;
-import io.github.artemget.pootos.context.node.Node;
+import java.io.IOException;
 
 /**
- * A durable store of content-addressed nodes and typed edges.
- *
- * <p>Writing is idempotent: persisting the same node or edge twice leaves a
- * single copy. The whole store is read back as a {@link GraphView}, so readers
- * traverse the persisted structure without reaching into a graph.</p>
+ * A read-only HTTP API for the Web UI.
  *
  * @since 0.0.1
  */
-public interface GraphStore {
+@FunctionalInterface
+public interface UiApi {
 
     /**
-     * Persist a node by its content address.
+     * Bind to the configured host and port and serve requests.
      *
-     * @param node Node to persist
-     * @throws StoreException When the store cannot be written
+     * @return Handle to the running server
+     * @throws IOException When the socket cannot be bound
      */
-    void persist(Node node) throws StoreException;
-
-    /**
-     * Persist a typed edge.
-     *
-     * @param edge Edge to persist
-     * @throws StoreException When the store cannot be written
-     */
-    void persist(Edge edge) throws StoreException;
-
-    /**
-     * Read the whole persisted graph.
-     *
-     * @return View of every stored node and edge
-     * @throws StoreException When the store cannot be read
-     */
-    GraphView load() throws StoreException;
+    UiRunning start() throws IOException;
 }

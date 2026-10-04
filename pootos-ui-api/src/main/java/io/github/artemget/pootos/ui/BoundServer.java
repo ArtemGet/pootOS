@@ -22,44 +22,38 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context.store;
+package io.github.artemget.pootos.ui;
 
-import io.github.artemget.pootos.context.edge.Edge;
-import io.github.artemget.pootos.context.graph.GraphView;
-import io.github.artemget.pootos.context.node.Node;
+import com.sun.net.httpserver.HttpServer;
 
 /**
- * A durable store of content-addressed nodes and typed edges.
- *
- * <p>Writing is idempotent: persisting the same node or edge twice leaves a
- * single copy. The whole store is read back as a {@link GraphView}, so readers
- * traverse the persisted structure without reaching into a graph.</p>
+ * A {@link UiRunning} handle over a started {@link HttpServer}.
  *
  * @since 0.0.1
  */
-public interface GraphStore {
+public final class BoundServer implements UiRunning {
 
     /**
-     * Persist a node by its content address.
-     *
-     * @param node Node to persist
-     * @throws StoreException When the store cannot be written
+     * Bound server.
      */
-    void persist(Node node) throws StoreException;
+    private final HttpServer server;
 
     /**
-     * Persist a typed edge.
+     * Ctor.
      *
-     * @param edge Edge to persist
-     * @throws StoreException When the store cannot be written
+     * @param server Bound server
      */
-    void persist(Edge edge) throws StoreException;
+    public BoundServer(final HttpServer server) {
+        this.server = server;
+    }
 
-    /**
-     * Read the whole persisted graph.
-     *
-     * @return View of every stored node and edge
-     * @throws StoreException When the store cannot be read
-     */
-    GraphView load() throws StoreException;
+    @Override
+    public int port() {
+        return this.server.getAddress().getPort();
+    }
+
+    @Override
+    public void close() {
+        this.server.stop(0);
+    }
 }

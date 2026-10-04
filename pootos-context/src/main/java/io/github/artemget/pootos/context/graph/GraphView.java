@@ -26,47 +26,32 @@ package io.github.artemget.pootos.context.graph;
 
 import io.github.artemget.pootos.context.edge.Edge;
 import io.github.artemget.pootos.context.node.Node;
-import io.github.artemget.pootos.context.node.NodeId;
-import java.util.Collection;
 
 /**
- * An immutable context graph of content-addressed nodes and typed edges.
+ * A read-only view over a context graph.
  *
- * <p>This contract is deliberately narrow: mutation and traversal only. The
- * whole structure is read through a separate {@link GraphView}, so a graph
- * need not expose its contents here.</p>
+ * <p>{@link #nodes()} and {@link #edges()} are not value getters: they hand a
+ * consumer the whole structure so it can traverse and render a graph without
+ * knowing how the graph is stored. Exposing an {@link Iterable} for traversal
+ * is behavior, not "tell, don't ask" access to an internal field. Keeping these
+ * two methods on a dedicated interface leaves {@link Graph} a small
+ * mutation-and-traversal contract.</p>
  *
  * @since 0.0.1
  */
-public interface Graph {
+public interface GraphView {
 
     /**
-     * A new graph that also contains the given node.
+     * Every node in this graph, for traversal.
      *
-     * @param node Node to include
-     * @return New graph including the node
+     * @return Nodes to walk
      */
-    Graph with(Node node);
+    Iterable<Node> nodes();
 
     /**
-     * A new graph that also contains the given edge.
+     * Every edge in this graph, for traversal.
      *
-     * @param edge Edge to include
-     * @return New graph including the edge
+     * @return Edges to walk
      */
-    Graph with(Edge edge);
-
-    /**
-     * Nodes reachable from the seed within the given number of hops.
-     *
-     * <p>Traversal follows edges in both directions, so an edge connects its
-     * endpoints for the purpose of a slice. The seed itself is included when
-     * the graph contains it; a depth of zero yields only the seed. Nodes whose
-     * id is unknown to the graph are never returned.</p>
-     *
-     * @param seed Node to start from
-     * @param depth Maximum number of hops
-     * @return Reachable nodes, seed included
-     */
-    Collection<Node> slice(NodeId seed, int depth);
+    Iterable<Edge> edges();
 }

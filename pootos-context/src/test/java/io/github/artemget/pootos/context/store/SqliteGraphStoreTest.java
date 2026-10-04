@@ -54,7 +54,7 @@ final class SqliteGraphStoreTest {
             store.persist(node);
             MatcherAssert.assertThat(
                 "A persisted node must be restored from the store",
-                store.load().slice(node.id(), 0),
+                store.load().nodes(),
                 Matchers.contains(new StoredNode(node.id(), node.json()))
             );
         }
@@ -86,8 +86,10 @@ final class SqliteGraphStoreTest {
             store.persist(new TypedEdge(source.id(), Relation.PRODUCES, target.id()));
             MatcherAssert.assertThat(
                 "An edge must be restored so its endpoints connect",
-                store.load().slice(source.id(), 1),
-                Matchers.hasItem(new StoredNode(target.id(), target.json()))
+                store.load().edges(),
+                Matchers.hasItem(
+                    new TypedEdge(source.id(), Relation.PRODUCES, target.id())
+                )
             );
         }
     }
@@ -101,7 +103,7 @@ final class SqliteGraphStoreTest {
         try (Connection connection = DriverManager.getConnection(this.database(dir))) {
             MatcherAssert.assertThat(
                 "A second store over the same file must see earlier data",
-                new SqliteGraphStore(connection).load().slice(node.id(), 0),
+                new SqliteGraphStore(connection).load().nodes(),
                 Matchers.contains(new StoredNode(node.id(), node.json()))
             );
         }

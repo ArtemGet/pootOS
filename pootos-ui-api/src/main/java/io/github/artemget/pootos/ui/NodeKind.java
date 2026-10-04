@@ -22,44 +22,49 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context.store;
+package io.github.artemget.pootos.ui;
 
-import io.github.artemget.pootos.context.edge.Edge;
-import io.github.artemget.pootos.context.graph.GraphView;
-import io.github.artemget.pootos.context.node.Node;
+import org.cactoos.Text;
 
 /**
- * A durable store of content-addressed nodes and typed edges.
+ * The kind of a node, derived from its canonical JSON.
  *
- * <p>Writing is idempotent: persisting the same node or edge twice leaves a
- * single copy. The whole store is read back as a {@link GraphView}, so readers
- * traverse the persisted structure without reaching into a graph.</p>
+ * <p>The store is content-addressed and type-agnostic: a node read back is
+ * represented by its id and JSON, not by the domain type that first wrote it
+ * (see {@code StoredNode}). The UI still needs a kind, so it is inferred from
+ * the discriminator keys the canonical JSON carries. An unrecognised shape
+ * yields the generic {@code node} kind rather than failing.</p>
  *
  * @since 0.0.1
  */
-public interface GraphStore {
+public final class NodeKind implements Text {
 
     /**
-     * Persist a node by its content address.
-     *
-     * @param node Node to persist
-     * @throws StoreException When the store cannot be written
+     * Canonical JSON of a node.
      */
-    void persist(Node node) throws StoreException;
+    private final String json;
 
     /**
-     * Persist a typed edge.
+     * Ctor.
      *
-     * @param edge Edge to persist
-     * @throws StoreException When the store cannot be written
+     * @param json Canonical JSON of a node
      */
-    void persist(Edge edge) throws StoreException;
+    public NodeKind(final String json) {
+        this.json = json;
+    }
 
-    /**
-     * Read the whole persisted graph.
-     *
-     * @return View of every stored node and edge
-     * @throws StoreException When the store cannot be read
-     */
-    GraphView load() throws StoreException;
+    @Override
+    public String asString() {
+        final String kind;
+        if (this.json.contains("\"title\"")) {
+            kind = "task";
+        } else if (this.json.contains("\"choice\"")) {
+            kind = "decision";
+        } else if (this.json.contains("\"advice\"")) {
+            kind = "lesson";
+        } else {
+            kind = "node";
+        }
+        return kind;
+    }
 }

@@ -22,44 +22,47 @@
  * SOFTWARE.
  */
 
-package io.github.artemget.pootos.context.store;
+package io.github.artemget.pootos.ui;
 
-import io.github.artemget.pootos.context.edge.Edge;
-import io.github.artemget.pootos.context.graph.GraphView;
-import io.github.artemget.pootos.context.node.Node;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import org.cactoos.Text;
+import org.cactoos.text.UncheckedText;
 
 /**
- * A durable store of content-addressed nodes and typed edges.
- *
- * <p>Writing is idempotent: persisting the same node or edge twice leaves a
- * single copy. The whole store is read back as a {@link GraphView}, so readers
- * traverse the persisted structure without reaching into a graph.</p>
+ * An {@link HttpHandler} that answers every request with one JSON body.
  *
  * @since 0.0.1
  */
-public interface GraphStore {
+public final class JsonHandler implements HttpHandler {
 
     /**
-     * Persist a node by its content address.
-     *
-     * @param node Node to persist
-     * @throws StoreException When the store cannot be written
+     * Body to answer with.
      */
-    void persist(Node node) throws StoreException;
+    private final Text body;
 
     /**
-     * Persist a typed edge.
+     * Ctor.
      *
-     * @param edge Edge to persist
-     * @throws StoreException When the store cannot be written
+     * @param body Body to answer with
      */
-    void persist(Edge edge) throws StoreException;
+    public JsonHandler(final Text body) {
+        this.body = body;
+    }
 
-    /**
-     * Read the whole persisted graph.
-     *
-     * @return View of every stored node and edge
-     * @throws StoreException When the store cannot be read
-     */
-    GraphView load() throws StoreException;
+    @Override
+    public void handle(final HttpExchange exchange) throws IOException {
+        final byte[] bytes = new UncheckedText(this.body).asString()
+            .getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set(
+            "Content-Type", "application/json; charset=utf-8"
+        );
+        exchange.sendResponseHeaders(200, bytes.length);
+        try (OutputStream out = exchange.getResponseBody()) {
+            out.write(bytes);
+        }
+    }
 }
