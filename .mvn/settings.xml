@@ -1,0 +1,18 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <!--
+    Force EVERY repository id to Maven Central. com.jcabi:parent declares legacy
+    oss.sonatype.org repositories/pluginRepositories, and a local ~/.m2 seeded from
+    corporate repos makes Maven probe dead/slow repositories on every resolve
+    (multi-minute stalls). Use: mvn -s .mvn/settings.xml ...  See docs/BUILD.md.
+  -->
+  <mirrors>
+    <mirror>
+      <id>central-mirror</id>
+      <name>Maven Central mirror for all repositories</name>
+      <url>https://repo.maven.apache.org/maven2</url>
+      <mirrorOf>*</mirrorOf>
+    </mirror>
+  </mirrors>
+</settings>
